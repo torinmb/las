@@ -1,0 +1,17 @@
+{
+  "name": "renderer",
+  "version": "1.0.0",
+  "description": "renderer",
+  "repository": "https://github.com/PolymerLabs/start-lit-element.git",
+  "main": "renderer.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Torin Blankensmith",
+  "license": "BSD-3-Clause",
+  "dependencies": {
+    "@webcomponents/webcomponentsjs": "latest",
+    "dat.gui": "^0.7.6",
+    "lit-element": "latest"
+  }
+}

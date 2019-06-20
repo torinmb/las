@@ -1,0 +1,27 @@
+{
+  "shell": "src/renderer.js",
+  "entrypoint": "index.html",
+  "npm": true,
+  "moduleResolution": "node",
+  "sources": ["src/renderer.js", "manifest/**", "manifest.json", "package.json"],
+  "extraDependencies": [
+    "robots.txt",
+    "node_modules/@webcomponents/webcomponentsjs/**"
+  ],
+  "builds": [{
+    "bundle": true,
+    "js": { 
+      "minify": true,
+      "compile": "es5",
+      "transformModulesToAmd": false
+    },
+    "css": {
+      "minify": true
+    },
+    "html": {
+      "minify": true
+    },
+    "addServiceWorker": true,
+    "addPushManifest": true
+  }]
+}
