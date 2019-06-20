@@ -35,27 +35,52 @@ export class StartLitElement extends LitElement {
     this.spSculptureId = '';
     this.width = '100vw';
     this.height = '100vh';
+
+    this.color1 = {
+      color: [255, 0, 0, 0.75],
+      xOffset: 4,
+      yOffset: 7,
+      blurRadius: 5
+    }
+
+    this.color2 = {
+      color: [24, 255, 0, 0.75],
+      xOffset: 0,
+      yOffset: 0,
+      blurRadius: 25
+    }
+
+    this.color3 = {
+      color: [0, 24, 255, 0.75],
+      xOffset: -3,
+      yOffset: 3,
+      blurRadius: 7
+    }
+
     this.params = {
-      color1 : [255, 0, 0, 0.75],
-      color1XOffset: 4,
-      color1YOffset: 7,
-      color1BlurRadius: 5,
       color2: [24, 255, 0, 0.75],
       color3: [0, 24, 255, 0.75],
       blur: 10,
       contrast: 500,
-      invert: 100
-
+      invert: 100,
+      fontSize: 200,
+      letterSpacing: -2,
+      textAlign: 'center',
+      text: 'LAS'
     }
+
     this.gui = new dat.GUI();
-    this.gui.addColor(this.params, 'color1')
-      .onChange(() => this.requestUpdate());
-    this.gui.add(this.params, 'color1XOffset', -20, 20)
-      .onChange(() => this.requestUpdate());
-    this.gui.addColor(this.params, 'color2')
-      .onChange(() => this.requestUpdate());
-    this.gui.addColor(this.params, 'color3')
-      .onChange(() => this.requestUpdate());
+    let el = (this.gui.domElement.style.display = 'none');
+    document.querySelector('.dg').style.zIndex = 999;
+
+    let color1 = this.gui.addFolder('Color 1');
+    this.initColorUI(color1, this.color1);
+
+    let color2 = this.gui.addFolder('Color 2');
+    this.initColorUI(color2, this.color2);
+
+    let color3 = this.gui.addFolder('Color 3');
+    this.initColorUI(color3, this.color3);
     
     this.gui.add(this.params, 'blur', 0, 20)
       .onChange(() => this.requestUpdate());
@@ -64,9 +89,27 @@ export class StartLitElement extends LitElement {
     this.gui.add(this.params, 'invert', 0, 100)
       .onChange(() => this.requestUpdate());
 
+    this.gui.add(this.params, 'fontSize', 0, 1000)
+      .onChange(() => this.requestUpdate());
+    this.gui.add(this.params, 'letterSpacing', -100, 100)
+      .onChange(() => this.requestUpdate());
+    this.gui.add(this.params, 'textAlign', ['left', 'center', 'right', 'justify'])
+      .onChange(() => this.requestUpdate());
+    this.gui.add(this.params, 'text')
+      .onChange(() => this.requestUpdate());
+
   }
 
-  
+  initColorUI(folder, param) {
+    folder.addColor(param, 'color')
+      .onChange(() => this.requestUpdate());
+    folder.add(param, 'xOffset', -100, 100)
+      .onChange(() => this.requestUpdate());
+    folder.add(param, 'yOffset', -100, 100)
+      .onChange(() => this.requestUpdate());
+    folder.add(param, 'blurRadius', 0, 100)
+      .onChange(() => this.requestUpdate());
+  }
 
   /**
    * Define a template for the new element by implementing LitElement's
@@ -99,7 +142,7 @@ export class StartLitElement extends LitElement {
           -webkit-box-pack: center;
           -webkit-justify-content: center;
           -ms-flex-pack: center;
-          justify-content: center;
+          // justify-content: center;
           -webkit-box-align: center;
           -webkit-align-items: center;
           -ms-flex-align: center;
@@ -112,19 +155,21 @@ export class StartLitElement extends LitElement {
         .las-text{
             font-family: 'Helvetica neue', 'Arial', sans-serif;
             color: #fff;
-            font-size: 200px;
-            text-align: center;
-            letter-spacing: -2px;
+            width: 100%;
+            font-size: ${this.params.fontSize}px;
+            text-align: ${this.params.textAlign};
+            letter-spacing: ${this.params.letterSpacing}px;
             display: block;
             -webkit-filter: blur(${this.params.blur}px);
             filter: blur(${this.params.blur}px);
-            text-shadow: ${this.params.color1XOffset}px 7px 5px rgba(${this.params.color1[0]}, ${this.params.color1[1]}, ${this.params.color1[2]}, ${this.params.color1[3]}), 
-                          0 0 25px rgba(${this.params.color2[0]}, ${this.params.color2[1]}, ${this.params.color2[2]}, ${this.params.color2[3]}),
-                           -3px 3px 7px rgba(${this.params.color3[0]}, ${this.params.color3[1]}, ${this.params.color3[2]}, ${this.params.color3[3]});
+            text-shadow: ${this.color1.xOffset}px ${this.color1.yOffset}px ${this.color1.blurRadius}px rgba(${this.color1.color[0]}, ${this.color1.color[1]}, ${this.color1.color[2]}, ${this.color1.color[3]}), 
+                         ${this.color2.xOffset}px ${this.color2.yOffset}px ${this.color2.blurRadius}px rgba(${this.color2.color[0]}, ${this.color2.color[1]}, ${this.color2.color[2]}, ${this.color2.color[3]}), 
+                         ${this.color3.xOffset}px ${this.color3.yOffset}px ${this.color3.blurRadius}px rgba(${this.color3.color[0]}, ${this.color3.color[1]}, ${this.color3.color[2]}, ${this.color3.color[3]});
+                         
         }
       </style>
       <div class="container">
-        <div class="las-text" value="LAS">LAS</div>
+        <div class="las-text">${this.params.text}</div>
       </div>
     `;
   }
@@ -135,11 +180,8 @@ export class StartLitElement extends LitElement {
    * - Focus the checkbox
    */
   firstUpdated() {
-    console.log('loaded');
-    
+    // console.log('loaded');
   }
-
-  
 
 }
 
