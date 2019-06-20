@@ -9,7 +9,8 @@
  */
 import { LitElement, html } from 'lit-element';
 import * as dat from 'dat.gui';
-
+// import {domtoimage} from './dom-to-image.min.js';
+// import { DomToImage} from 'node_modules/dom-to-image/dist/dom-to-image/dom-to-image.min.js';
 
 export class StartLitElement extends LitElement {
   
@@ -22,7 +23,8 @@ export class StartLitElement extends LitElement {
       spSculptureId: { type: String },
       width: { type: String },
       height: { type: String },
-      params: {type: Object}
+      params: {type: Object},
+      mouse: {type: Object}
     };
   }
 
@@ -35,6 +37,10 @@ export class StartLitElement extends LitElement {
     this.spSculptureId = '';
     this.width = '100vw';
     this.height = '100vh';
+    this.mouse = {
+      x: 1,
+      y: 1
+    }
 
     this.color1 = {
       color: [255, 0, 0, 0.75],
@@ -65,13 +71,22 @@ export class StartLitElement extends LitElement {
       invert: 100,
       fontSize: 200,
       letterSpacing: -2,
+      opacity: 1,
       textAlign: 'center',
-      text: 'LAS'
+      text: 'LAS',
+      mouseMovementSpeed: 20,
+      downloadSVG: () => this.downloadSVG.bind(this)
     }
 
+
     this.gui = new dat.GUI();
+    this.gui.remember(this.params);
+    this.gui.remember(this.color1);
+    this.gui.remember(this.color2);
+    this.gui.remember(this.color3);
     let el = (this.gui.domElement.style.display = 'none');
     document.querySelector('.dg').style.zIndex = 999;
+    window.addEventListener('mousemove', this.onDocumentMouseMove.bind(this), false);
 
     let color1 = this.gui.addFolder('Color 1');
     this.initColorUI(color1, this.color1);
@@ -89,6 +104,9 @@ export class StartLitElement extends LitElement {
     this.gui.add(this.params, 'invert', 0, 100)
       .onChange(() => this.requestUpdate());
 
+    this.gui.add(this.params, 'opacity', 0.0, 1.0)
+      .onChange(() => this.requestUpdate());
+
     this.gui.add(this.params, 'fontSize', 0, 1000)
       .onChange(() => this.requestUpdate());
     this.gui.add(this.params, 'letterSpacing', -100, 100)
@@ -97,7 +115,8 @@ export class StartLitElement extends LitElement {
       .onChange(() => this.requestUpdate());
     this.gui.add(this.params, 'text')
       .onChange(() => this.requestUpdate());
-
+    this.gui.add(this.params, 'mouseMovementSpeed', 1, 100);
+    this.gui.add(this.params, 'downloadSVG');
   }
 
   initColorUI(folder, param) {
@@ -117,12 +136,26 @@ export class StartLitElement extends LitElement {
    */
   render() {
     return html`
+      
       <style>
         :host { display: block; }
         :host([hidden]) { display: none; }
 
         @font-face {
           font-family: 'Helvetica neue';
+          src: url('./fonts/HelveticaNeue-Bold.woff') format('woff');
+          font-weight: 700;
+          font-style: normal;
+        }
+
+        @font-face {
+          font-family: 'Helvetica neue';
+          src: url('./fonts/HelveticaNeue-Bold.woff') format('woff');
+          font-weight: 700;
+          font-style: normal;
+        }
+        @font-face {
+          font-family: 'Helvetica';
           src: url('./fonts/HelveticaNeue-Bold.woff') format('woff');
           font-weight: 700;
           font-style: normal;
@@ -148,6 +181,7 @@ export class StartLitElement extends LitElement {
           -ms-flex-align: center;
           align-items: center;
           background-color: #000;
+          opacity: ${this.params.opacity};
           -webkit-filter: invert(${this.params.invert}%) contrast(${this.params.contrast}%);
           filter: invert(${this.params.invert}%) contrast(${this.params.contrast}%);
         }
@@ -162,16 +196,29 @@ export class StartLitElement extends LitElement {
             display: block;
             -webkit-filter: blur(${this.params.blur}px);
             filter: blur(${this.params.blur}px);
-            text-shadow: ${this.color1.xOffset}px ${this.color1.yOffset}px ${this.color1.blurRadius}px rgba(${this.color1.color[0]}, ${this.color1.color[1]}, ${this.color1.color[2]}, ${this.color1.color[3]}), 
-                         ${this.color2.xOffset}px ${this.color2.yOffset}px ${this.color2.blurRadius}px rgba(${this.color2.color[0]}, ${this.color2.color[1]}, ${this.color2.color[2]}, ${this.color2.color[3]}), 
-                         ${this.color3.xOffset}px ${this.color3.yOffset}px ${this.color3.blurRadius}px rgba(${this.color3.color[0]}, ${this.color3.color[1]}, ${this.color3.color[2]}, ${this.color3.color[3]});
+            text-shadow: ${this.color1.xOffset - this.mouse.x}px ${this.color1.yOffset - this.mouse.y}px ${this.color1.blurRadius}px rgba(${this.color1.color[0]}, ${this.color1.color[1]}, ${this.color1.color[2]}, ${this.color1.color[3]}), 
+                         ${this.color2.xOffset - this.mouse.x}px ${this.color2.yOffset - this.mouse.y}px ${this.color2.blurRadius}px rgba(${this.color2.color[0]}, ${this.color2.color[1]}, ${this.color2.color[2]}, ${this.color2.color[3]}), 
+                         ${this.color3.xOffset - this.mouse.x}px ${this.color3.yOffset - this.mouse.y}px ${this.color3.blurRadius}px rgba(${this.color3.color[0]}, ${this.color3.color[1]}, ${this.color3.color[2]}, ${this.color3.color[3]});
                          
         }
       </style>
-      <div class="container">
+      <div id="text-container" class="container">
         <div class="las-text">${this.params.text}</div>
+        
       </div>
     `;
+  }
+
+  downloadSVG() {
+    domtoimage.toBlob(document.getElementById('text-container'))
+      .then(function (blob) {
+        window.saveAs(blob, `${this.params.text}.png`);
+      });
+
+    // domtoimage.toSvg(document.getElementById('my-node'), { filter: (node) => node.tagName !== 'i' })
+    //   .then((dataUrl) => {
+        
+    //   });
   }
 
   /**
@@ -181,6 +228,14 @@ export class StartLitElement extends LitElement {
    */
   firstUpdated() {
     // console.log('loaded');
+  }
+
+  onDocumentMouseMove(event) {
+    event.preventDefault();
+    console.log(event, this.mouse);
+    this.mouse.x = ((event.clientX / window.innerWidth) * 2 - 1) * this.params.mouseMovementSpeed;
+    this.mouse.y = -(- (event.clientY / window.innerHeight) * 2 + 1) * this.params.mouseMovementSpeed;
+    this.requestUpdate();
   }
 
 }
