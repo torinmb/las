@@ -23,8 +23,11 @@
       waitFor(cb){ addEventListener('WebComponentsReady', cb) }
     } 
     WebComponents.waitFor(async () => { 
-      import('./src/renderer.js');
+      import('./src/css-renderer.js');
     });
+    WebComponents.waitFor(async () => {
+        import('./src/shader-renderer.js');
+      });
   </script>
   <!-- Change stuff here for your app -->
   <meta name="Light Art Studio" content="renderer">
@@ -56,7 +59,9 @@
       Could not render the custom element. Check that JavaScript is enabled.
     </noscript>
   </las-renderer> -->
-  <las-renderer id="las-renderer" width="100vw" height="100vh"></las-renderer>
+  <!-- <blotter-renderer id="las-renderer" width="100vw" height="100vh"></blotter-renderer> -->
+  
+  <css-renderer id="shader-renderer" width="100vw" height="100vh" ></las-renderer>
   <!-- <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.6/dat.gui.min.js"></script>
   <script>
       

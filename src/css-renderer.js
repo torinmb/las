@@ -238,4 +238,4 @@ export class StartLitElement extends LitElement {
 }
 
 // Register the element with the browser
-customElements.define('las-renderer', StartLitElement);
+customElements.define('css-renderer', StartLitElement);
