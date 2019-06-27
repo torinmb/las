@@ -13,6 +13,7 @@
     "@webcomponents/webcomponentsjs": "latest",
     "dat.gui": "^0.7.6",
     "dom-to-image": "^2.6.0",
-    "lit-element": "latest"
+    "lit-element": "latest",
+    "three": "^0.106.1"
   }
 }

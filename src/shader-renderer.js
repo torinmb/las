@@ -9,6 +9,7 @@
  */
 import { LitElement, html } from 'lit-element';
 import * as dat from 'dat.gui';
+import { renderScene } from './three-scene.js'
 
 export class StartLitElement extends LitElement {
   
@@ -200,7 +201,7 @@ export class StartLitElement extends LitElement {
                          
         }
       </style>
-      <div id="text-container" class="container">
+      <div id="container" class="container">
         <div class="las-text">${this.params.text}</div>
         
       </div>
@@ -213,6 +214,8 @@ export class StartLitElement extends LitElement {
    * - Focus the checkbox
    */
   firstUpdated() {
+      const canvasEl = this.shadowRoot.getElementById('container');
+      renderScene(canvasEl);
     // console.log('loaded');
   }
 
