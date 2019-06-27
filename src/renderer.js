@@ -9,8 +9,6 @@
  */
 import { LitElement, html } from 'lit-element';
 import * as dat from 'dat.gui';
-// import {domtoimage} from './dom-to-image.min.js';
-// import { DomToImage} from 'node_modules/dom-to-image/dist/dom-to-image/dom-to-image.min.js';
 
 export class StartLitElement extends LitElement {
   
@@ -22,7 +20,7 @@ export class StartLitElement extends LitElement {
     return {
       spSculptureId: { type: String },
       width: { type: String },
-      height: { type: String },
+        height: { type: String },
       params: {type: Object},
       mouse: {type: Object}
     };
@@ -136,7 +134,6 @@ export class StartLitElement extends LitElement {
    */
   render() {
     return html`
-      
       <style>
         :host { display: block; }
         :host([hidden]) { display: none; }
@@ -190,6 +187,7 @@ export class StartLitElement extends LitElement {
             font-family: 'Helvetica neue', 'Arial', sans-serif;
             color: #fff;
             width: 100%;
+            font-weight: bold;
             font-size: ${this.params.fontSize}px;
             text-align: ${this.params.textAlign};
             letter-spacing: ${this.params.letterSpacing}px;
@@ -232,9 +230,8 @@ export class StartLitElement extends LitElement {
 
   onDocumentMouseMove(event) {
     event.preventDefault();
-    console.log(event, this.mouse);
-    this.mouse.x = ((event.clientX / window.innerWidth) * 2 - 1) * this.params.mouseMovementSpeed;
-    this.mouse.y = -(- (event.clientY / window.innerHeight) * 2 + 1) * this.params.mouseMovementSpeed;
+    this.mouse.x = (((event.clientX - 0.5) / window.innerWidth) * 2 - 1) * this.params.mouseMovementSpeed ;
+    this.mouse.y = -(- ((event.clientY - 0.5) / window.innerHeight) * 2 + 1) * this.params.mouseMovementSpeed;
     this.requestUpdate();
   }
 
