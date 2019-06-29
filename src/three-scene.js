@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { ShaderContainer } from './shader-container.js';
 
-export const renderScene = (container) => {
+export const renderScene = (container, guiData) => {
     
     const scene = new THREE.Scene();
     const texture = new THREE.TextureLoader().load('fonts/msdf.png');
@@ -67,7 +67,7 @@ export const renderScene = (container) => {
         // }
 
         // controls.update();
-        shaderContainer.update(time);
+        shaderContainer.update({time, mouse, ...guiData});
         renderer.render(scene, camera);
     }
 

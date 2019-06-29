@@ -19,9 +19,8 @@ export class StartLitElement extends LitElement {
    */
   static get properties() {
     return {
-      spSculptureId: { type: String },
       width: { type: String },
-        height: { type: String },
+      height: { type: String },
       params: {type: Object},
       mouse: {type: Object}
     };
@@ -43,37 +42,35 @@ export class StartLitElement extends LitElement {
 
     this.color1 = {
       color: [255, 0, 0, 0.75],
-      xOffset: 4,
-      yOffset: 7,
-      blurRadius: 5
+      xOffset: 0.4,
+      yOffset: -0.7,
+      blurRadius: 0.5
     }
 
     this.color2 = {
       color: [24, 255, 0, 0.75],
-      xOffset: 0,
-      yOffset: 0,
-      blurRadius: 25
+      xOffset: 0.0001,
+      yOffset: 0.0001,
+      blurRadius: .6
     }
 
     this.color3 = {
       color: [0, 24, 255, 0.75],
-      xOffset: -3,
-      yOffset: 3,
-      blurRadius: 7
+      xOffset: -0.3,
+      yOffset: -0.3,
+      blurRadius: 0.7
     }
 
     this.params = {
-      color2: [24, 255, 0, 0.75],
-      color3: [0, 24, 255, 0.75],
       blur: 10,
       contrast: 500,
       invert: 100,
-      fontSize: 200,
-      letterSpacing: -2,
+      fontSize: 1.0,
+      letterSpacing: 0.6,
       opacity: 1,
       textAlign: 'center',
       text: 'LAS',
-      mouseMovementSpeed: 20,
+      mouseMovementSpeed: 0.2,
       downloadSVG: () => this.downloadSVG.bind(this)
     }
 
@@ -106,26 +103,26 @@ export class StartLitElement extends LitElement {
     this.gui.add(this.params, 'opacity', 0.0, 1.0)
       .onChange(() => this.requestUpdate());
 
-    this.gui.add(this.params, 'fontSize', 0, 1000)
+    this.gui.add(this.params, 'fontSize', -1.0, 10.0)
       .onChange(() => this.requestUpdate());
-    this.gui.add(this.params, 'letterSpacing', -100, 100)
+    this.gui.add(this.params, 'letterSpacing', -2.0, 2.0)
       .onChange(() => this.requestUpdate());
     this.gui.add(this.params, 'textAlign', ['left', 'center', 'right', 'justify'])
       .onChange(() => this.requestUpdate());
     this.gui.add(this.params, 'text')
       .onChange(() => this.requestUpdate());
-    this.gui.add(this.params, 'mouseMovementSpeed', 1, 100);
+    this.gui.add(this.params, 'mouseMovementSpeed', 0., 2.);
     this.gui.add(this.params, 'downloadSVG');
   }
 
   initColorUI(folder, param) {
     folder.addColor(param, 'color')
       .onChange(() => this.requestUpdate());
-    folder.add(param, 'xOffset', -100, 100)
+    folder.add(param, 'xOffset', -0.25, 0.25)
       .onChange(() => this.requestUpdate());
-    folder.add(param, 'yOffset', -100, 100)
+    folder.add(param, 'yOffset', -0.25, 0.25)
       .onChange(() => this.requestUpdate());
-    folder.add(param, 'blurRadius', 0, 100)
+    folder.add(param, 'blurRadius', 0.0, 1.0)
       .onChange(() => this.requestUpdate());
   }
 
@@ -184,7 +181,7 @@ export class StartLitElement extends LitElement {
           filter: invert(${this.params.invert}%) contrast(${this.params.contrast}%);
         }
 
-        .las-text{
+        canvas {
             font-family: 'Helvetica neue', 'Arial', sans-serif;
             color: #fff;
             width: 100%;
@@ -202,7 +199,7 @@ export class StartLitElement extends LitElement {
         }
       </style>
       <div id="container" class="container">
-        <div class="las-text">${this.params.text}</div>
+        
         
       </div>
     `;
@@ -215,7 +212,7 @@ export class StartLitElement extends LitElement {
    */
   firstUpdated() {
       const canvasEl = this.shadowRoot.getElementById('container');
-      renderScene(canvasEl);
+      renderScene(canvasEl, {color1 :this.color1, color2: this.color2, color3: this.color3, params: this.params});
     // console.log('loaded');
   }
 
@@ -223,7 +220,7 @@ export class StartLitElement extends LitElement {
     event.preventDefault();
     this.mouse.x = (((event.clientX - 0.5) / window.innerWidth) * 2 - 1) * this.params.mouseMovementSpeed ;
     this.mouse.y = -(- ((event.clientY - 0.5) / window.innerHeight) * 2 + 1) * this.params.mouseMovementSpeed;
-    this.requestUpdate();
+    // this.requestUpdate();
   }
 
 }

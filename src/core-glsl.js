@@ -33,6 +33,29 @@ const float TWO_PI = TAU;
 const float max_dist = 4.0;
 const float intersection_threshold = 0.00007;
 
+
+// Simple oscillators 
+
+float osc(float freq, float amp, float base, float phase) {
+    return base+amp*sin(TWO_PI*(freq*time+phase));
+}
+
+float osc(float freq, float amp, float base) {
+    return osc(freq, amp, base, 0.0);
+}
+
+float osc(float freq, float amp) {
+    return osc(freq, amp, 1.0);
+}
+
+float osc(float freq) {
+    return osc(freq, 0.5);
+}
+
+float osc() {
+    return osc(1.0);
+}
+
 // Trig functions normalized to the range 0.0-1.0
 float nsin(float x) {
     return sin(x)*0.5+0.5;
@@ -235,6 +258,116 @@ vec4 sphericalDistribution( vec3 p, float n )
 
 
 
+#define COLS 16.0
+#define ROWS 16.0
+#define START_CODE 33
+#define CHARS_COUNT 94
+
+float pxRange = 1.0;//3.0 is better for fullscreen; //: logrange(0.25, 256.0);
+float thickness = 0.0; //: range(-1.0, +1.0);
+float border = 0.0; //: range(0.0, 0.25);
+
+float pxSize = 0.05;
+
+const vec3 bottomColor = vec3(0.0, 0.21875, 0.375);
+const vec3 topColor = vec3(0.0, 0.625, 1.0);
+const vec3 borderColor = vec3(1.0, 1.0, 1.0);
+
+// vec2 shadow1Offset = vec2(+0.0625, -0.03125) * 0.3 / 16.; //: range(-0.25, +0.25);
+// float shadow1Blur = 0.2;
+// const vec4 shadow1Color = vec4(1, 0, 0, 1.);
+
+uniform vec2 shadow1Offset;
+uniform float shadow1Blur;
+uniform vec4 shadow1Color;
+
+uniform vec2 shadow2Offset;
+uniform float shadow2Blur;
+uniform vec4 shadow2Color;
+
+uniform vec2 shadow3Offset;
+uniform float shadow3Blur;
+uniform vec4 shadow3Color;
+
+uniform float fontSize;
+uniform float letterSpacing;
+uniform float mouseMovementSpeed;
+// vec2 shadow2Offset = vec2(0., 0.) ;
+// float shadow2Blur = 0.2;
+// const vec4 shadow2Color = vec4(0.1, 1, 0, 1.);
+
+// vec2 shadow3Offset = vec2(-0.1625, -0.03125) * 0.3 / 16.; //: range(-0.25, +0.25);
+// float shadow3Blur = 0.2;
+// const vec4 shadow3Color = vec4(0, 0.1, 1, 1.);
+
+float median(float r, float g, float b) 
+{
+    return max(min(r, g), min(max(r, g), b));
+}
+
+float remap(float x, vec2 from, vec2 to)
+{
+    
+    return to.x + (x - from.x) / 
+        (from.y - from.x) * (to.y - to.x);
+}
+
+vec2 getCharacterUV(vec2 uv, int code)
+{
+    //float ar = iResolution.x / iResolution.y;
+    float row = float((code - START_CODE) / int(COLS));
+    float col = float(float(code - START_CODE) - COLS * row);
+    float stepX = 1.0 / COLS, stepY = 1.0 / ROWS;
+    vec2 tileX = vec2(col * stepX, (col + 1.0) * stepX);
+    vec2 tileY = vec2((ROWS - (row + 1.0)) * stepY, 
+                      (ROWS - row) * stepY);
+        
+    vec2 result = vec2(remap(uv.x, vec2(0, 1), tileX), 
+                       remap(uv.y, vec2(0, 1), tileY));
+    
+    return result;
+}
+
+float linearstep(float lo, float hi, float x)
+{
+	return (clamp(x, lo, hi) - lo) / (hi - lo);
+}
+
+float character(vec2 uv, int code) {
+    
+    vec2 cuv = getCharacterUV(uv, code);
+    vec3 sd = texture2D(msdf, cuv).rgb;
+    
+    float sigDist = median(sd.r, sd.g, sd.b) - 0.5;
+    vec2 suv = vec2((uv.x -0.5)*0.85, (uv.y-0.5)*0.02);
+    sigDist = -subtract(sigDist, length(suv)-.3 );  
+    //float w = clamp(sigDist/fwidth(sigDist) + 0.5, 0.0, 1.0);
+  	//float dist = mix(-1.0, 1.0, w);
+  	
+  	//float dist = subtract(sigDist*0.03, box(p, vec3(0.4, 0.43, .000)));
+  	
+  	return sigDist;
+}
+
+float las(vec2 uv) {
+    // uv.y -= 1.0;
+    // uv.x += 1.0;
+    //uv *= fontSize;
+    uv += noise(uv +time*0.001 * 100.)*0.01;
+    uv = (uv - vec2(0.5)) * fontSize + vec2(0.5);
+    
+    //uv.x -= fontSize ;
+    //uv.y -= fontSize;
+    vec2 uv2 = uv;
+    uv2.x += letterSpacing;
+  	float d = character(uv2, 89);
+  	uv2.x -= letterSpacing;
+  	d = max(d, character(uv2, 65));
+    uv2.x -= letterSpacing;
+  	d = max(d, character(uv2, 83));
+  	return d;
+}
+
 `;
 
 
@@ -242,10 +375,33 @@ vec4 sphericalDistribution( vec3 p, float n )
 export const fragFooter = `
 // For advanced users //
 void main() {
+    vec2 uv = vUv;
+    msdfTexture = texture2D(msdf, uv).rgb;
     
-    msdfTexture = texture2D(msdf, vUv).rgb;
-    vec3 col = 0.5 + 0.5*cos(time+vUv.xyx+vec3(0,2,4));
-    // Output to screen
-    gl_FragColor = vec4(col,1.0);
+    //float sd = las(uv);
+    //int code = START_CODE + int(mouse.x * float(CHARS_COUNT));    
+    int code = 76;
+    
+    
+    float sd = las(uv);
+    float inside = linearstep(-border-pxSize, -border+pxSize, sd);
+    float outsideBorder = border > 0.0 ? linearstep(+border-pxSize, +border+pxSize, sd) : 1.0;
+    
+    vec2 mouseMovement = mouse.xy * mouseMovementSpeed;
+    sd = las(uv - shadow1Offset - mouseMovement);
+    float shadow1 = shadow1Color.a*linearstep(-shadow1Blur-pxSize, +shadow1Blur+pxSize, sd);
+
+    sd = las(uv - shadow2Offset - mouseMovement);
+    float shadow2 = shadow2Color.a*linearstep(-shadow2Blur-pxSize, +shadow2Blur+pxSize, sd);
+
+    sd = las(uv - shadow3Offset - mouseMovement);
+    float shadow3 = shadow3Color.a*linearstep(-shadow3Blur-pxSize, +shadow3Blur+pxSize, sd);
+
+    vec4 fg = vec4(mix(borderColor, mix(bottomColor, topColor, uv.y), outsideBorder), inside);
+    vec4 o = vec4(mix(vec3(0.0), vec3(1.0), fg.a), fg.a);
+    o = mix(o, shadow1Color, (1.0 - inside) * shadow1);
+    o = mix(o, shadow2Color, (1.0 - inside) * shadow2);
+    gl_FragColor = mix(o, shadow3Color, (1.0 - inside) * shadow3);
+	
 }
 `;
