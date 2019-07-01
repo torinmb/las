@@ -10,7 +10,37 @@ void main()
 }
 `;
 
+const genCharacters = (str)=> {
+    let out = '';
+    if(str.length > 1) {
+        //out += 'uv.x += letterSpacing;'
+    }
+    for(let i = 0; i < str.length; i++) {
+        
+        
+        let amt = (str.length / 2 - i);
+        if(amt === 0) {
+            amt = 0.0000001;
+        }
+        out += `uv.x += letterSpacing * ${amt*1.00000010};\n`
+        let code = str.charCodeAt(i);
+        out += `d = max(d, character(uv, ${code}));\n`;
+        out += `uv.x -= letterSpacing * ${amt * 1.00000010};\n`
+        
+    }
+    return out;
+}
 
+const characters = genCharacters('LAS');
+console.log(characters);
+// const characters = `
+//     uv.x += letterSpacing;
+//     d = character(uv, 76);
+//     uv.x -= letterSpacing;
+//     d = max(d, character(uv, 65));
+//     uv.x -= letterSpacing;
+//     d = max(d, character(uv, 83));
+// `;
 
 export const sculptureStarterCode = `
 uniform mat4 projectionMatrix;
@@ -263,7 +293,7 @@ vec4 sphericalDistribution( vec3 p, float n )
 #define START_CODE 33
 #define CHARS_COUNT 94
 
-float pxRange = 1.0;//3.0 is better for fullscreen; //: logrange(0.25, 256.0);
+
 float thickness = 0.0; //: range(-1.0, +1.0);
 float border = 0.0; //: range(0.0, 0.25);
 
@@ -272,10 +302,6 @@ float pxSize = 0.05;
 const vec3 bottomColor = vec3(0.0, 0.21875, 0.375);
 const vec3 topColor = vec3(0.0, 0.625, 1.0);
 const vec3 borderColor = vec3(1.0, 1.0, 1.0);
-
-// vec2 shadow1Offset = vec2(+0.0625, -0.03125) * 0.3 / 16.; //: range(-0.25, +0.25);
-// float shadow1Blur = 0.2;
-// const vec4 shadow1Color = vec4(1, 0, 0, 1.);
 
 uniform vec2 shadow1Offset;
 uniform float shadow1Blur;
@@ -292,13 +318,7 @@ uniform vec4 shadow3Color;
 uniform float fontSize;
 uniform float letterSpacing;
 uniform float mouseMovementSpeed;
-// vec2 shadow2Offset = vec2(0., 0.) ;
-// float shadow2Blur = 0.2;
-// const vec4 shadow2Color = vec4(0.1, 1, 0, 1.);
 
-// vec2 shadow3Offset = vec2(-0.1625, -0.03125) * 0.3 / 16.; //: range(-0.25, +0.25);
-// float shadow3Blur = 0.2;
-// const vec4 shadow3Color = vec4(0, 0.1, 1, 1.);
 
 float median(float r, float g, float b) 
 {
@@ -339,32 +359,21 @@ float character(vec2 uv, int code) {
     vec3 sd = texture2D(msdf, cuv).rgb;
     
     float sigDist = median(sd.r, sd.g, sd.b) - 0.5;
-    vec2 suv = vec2((uv.x -0.5)*0.85, (uv.y-0.5)*0.02);
-    sigDist = -subtract(sigDist, length(suv)-.3 );  
-    //float w = clamp(sigDist/fwidth(sigDist) + 0.5, 0.0, 1.0);
-  	//float dist = mix(-1.0, 1.0, w);
-  	
-  	//float dist = subtract(sigDist*0.03, box(p, vec3(0.4, 0.43, .000)));
+
+    sigDist *= step(0.0, uv.x);
+    sigDist *= step(0.0, 1.-uv.x);
+    sigDist *= step(0.0, uv.y);
+    sigDist *= step(0.0, 1.-uv.y);
   	
   	return sigDist;
 }
 
 float las(vec2 uv) {
-    // uv.y -= 1.0;
-    // uv.x += 1.0;
-    //uv *= fontSize;
-    uv += noise(uv +time*0.001 * 100.)*0.01;
+
+    uv += noise(uv +time*0.1)*0.01;
     uv = (uv - vec2(0.5)) * fontSize + vec2(0.5);
-    
-    //uv.x -= fontSize ;
-    //uv.y -= fontSize;
-    vec2 uv2 = uv;
-    uv2.x += letterSpacing;
-  	float d = character(uv2, 89);
-  	uv2.x -= letterSpacing;
-  	d = max(d, character(uv2, 65));
-    uv2.x -= letterSpacing;
-  	d = max(d, character(uv2, 83));
+    float d = 0.0;
+    ${characters}
   	return d;
 }
 
@@ -378,30 +387,30 @@ void main() {
     vec2 uv = vUv;
     msdfTexture = texture2D(msdf, uv).rgb;
     
-    //float sd = las(uv);
     //int code = START_CODE + int(mouse.x * float(CHARS_COUNT));    
-    int code = 76;
-    
     
     float sd = las(uv);
-    float inside = linearstep(-border-pxSize, -border+pxSize, sd);
-    float outsideBorder = border > 0.0 ? linearstep(+border-pxSize, +border+pxSize, sd) : 1.0;
+    float inside = linearstep(0.0, -border+pxSize, sd);
+    float outsideBorder = border > 0.0 ? linearstep(0.0, +border+pxSize, sd) : 1.0;
     
     vec2 mouseMovement = mouse.xy * mouseMovementSpeed;
     sd = las(uv - shadow1Offset - mouseMovement);
-    float shadow1 = shadow1Color.a*linearstep(-shadow1Blur-pxSize, +shadow1Blur+pxSize, sd);
+    float shadow1 = shadow1Color.a*linearstep(0.0, +shadow1Blur+pxSize, sd);
 
     sd = las(uv - shadow2Offset - mouseMovement);
-    float shadow2 = shadow2Color.a*linearstep(-shadow2Blur-pxSize, +shadow2Blur+pxSize, sd);
+    float shadow2 = shadow2Color.a*linearstep(0.0, +shadow2Blur+pxSize, sd);
 
     sd = las(uv - shadow3Offset - mouseMovement);
-    float shadow3 = shadow3Color.a*linearstep(-shadow3Blur-pxSize, +shadow3Blur+pxSize, sd);
+    float shadow3 = shadow3Color.a*linearstep(0.0, +shadow3Blur+pxSize, sd);
 
     vec4 fg = vec4(mix(borderColor, mix(bottomColor, topColor, uv.y), outsideBorder), inside);
     vec4 o = vec4(mix(vec3(0.0), vec3(1.0), fg.a), fg.a);
     o = mix(o, shadow1Color, (1.0 - inside) * shadow1);
     o = mix(o, shadow2Color, (1.0 - inside) * shadow2);
-    gl_FragColor = mix(o, shadow3Color, (1.0 - inside) * shadow3);
+    o = mix(o, shadow3Color, (1.0 - inside) * shadow3);
+    uv = (uv - vec2(0.5)) * fontSize + vec2(0.5);
+
+    gl_FragColor = o;
 	
 }
 `;
