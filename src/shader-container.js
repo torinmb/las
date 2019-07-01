@@ -103,7 +103,6 @@ export class ShaderContainer {
         let c3 = color3.color;
         this.mesh.material.uniforms['shadow3Color'].value = [c3[0] / 255, c3[1] / 255, c3[2] / 255, c3[3]];
         this.mesh.material.uniforms['shadow3Blur'].value = color3.blurRadius;
-        console.log(params.fontSize)
         this.mesh.material.uniforms['fontSize'].value = params.fontSize;
         this.mesh.material.uniforms['letterSpacing'].value = params.letterSpacing;
         this.mesh.material.uniforms['mouseMovementSpeed'].value = params.mouseMovementSpeed;
