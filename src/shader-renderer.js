@@ -42,35 +42,35 @@ export class StartLitElement extends LitElement {
 
     this.color1 = {
       color: [255, 0, 0, 0.75],
-      xOffset: 0.4,
-      yOffset: -0.7,
-      blurRadius: 0.5
+      xOffset: 0.012,
+      yOffset: -0.012,
+      blurRadius: 0.25
     }
 
     this.color2 = {
       color: [24, 255, 0, 0.75],
       xOffset: 0.0001,
       yOffset: 0.0001,
-      blurRadius: .6
+      blurRadius: .3
     }
 
     this.color3 = {
       color: [0, 24, 255, 0.75],
-      xOffset: -0.3,
-      yOffset: -0.3,
-      blurRadius: 0.7
+      xOffset: -0.01,
+      yOffset: 0.01,
+      blurRadius: 0.25
     }
 
     this.params = {
       blur: 10,
       contrast: 500,
-      invert: 100,
-      fontSize: 1.0,
-      letterSpacing: 0.6,
+      invert: 0,
+      fontSize: 4.0,
+      letterSpacing: 0.62,
       opacity: 1,
       textAlign: 'center',
       text: 'LAS',
-      mouseMovementSpeed: 0.2,
+      mouseMovementSpeed: 0.02,
       downloadSVG: () => this.downloadSVG.bind(this)
     }
 
