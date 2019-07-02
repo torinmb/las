@@ -62,9 +62,9 @@ export class StartLitElement extends LitElement {
     }
 
     this.params = {
-      blur: 10,
-      contrast: 500,
-      invert: 0,
+      blur: .9,
+      contrast: 0.8,
+      invert: 3.0,
       fontSize: 4.0,
       letterSpacing: 0.62,
       opacity: 1,
@@ -74,12 +74,18 @@ export class StartLitElement extends LitElement {
       downloadSVG: () => this.downloadSVG.bind(this)
     }
 
+    this.bloom = {
+        distinction : 1.0,
+	    resolutionScale: 0.5
+    }
+
 
     this.gui = new dat.GUI();
     this.gui.remember(this.params);
     this.gui.remember(this.color1);
     this.gui.remember(this.color2);
     this.gui.remember(this.color3);
+    this.gui.remember(this.bloom);
     let el = (this.gui.domElement.style.display = 'none');
     document.querySelector('.dg').style.zIndex = 999;
     window.addEventListener('mousemove', this.onDocumentMouseMove.bind(this), false);
@@ -92,18 +98,25 @@ export class StartLitElement extends LitElement {
 
     let color3 = this.gui.addFolder('Color 3');
     this.initColorUI(color3, this.color3);
+
+    let bloom = this.gui.addFolder('Bloom');
+    bloom.add(this.bloom, 'distinction', 0.0, 2.0)
+        .onChange(() => this.requestUpdate());
+    bloom.add(this.bloom, 'resolutionScale', 0.0, 2.0)
+        .onChange(() => this.requestUpdate());
+
     
-    this.gui.add(this.params, 'blur', 0, 20)
+    this.gui.add(this.params, 'blur', 0.0, 5.0)
       .onChange(() => this.requestUpdate());
-    this.gui.add(this.params, 'contrast', 0, 1000)
+    this.gui.add(this.params, 'contrast', 0.0, 1.0)
       .onChange(() => this.requestUpdate());
-    this.gui.add(this.params, 'invert', 0, 100)
+    this.gui.add(this.params, 'invert', 0.0, 4.0)
       .onChange(() => this.requestUpdate());
 
     this.gui.add(this.params, 'opacity', 0.0, 1.0)
       .onChange(() => this.requestUpdate());
 
-    this.gui.add(this.params, 'fontSize', -1.0, 10.0)
+    this.gui.add(this.params, 'fontSize', -1.0, 30.0)
       .onChange(() => this.requestUpdate());
     this.gui.add(this.params, 'letterSpacing', -2.0, 2.0)
       .onChange(() => this.requestUpdate());
@@ -177,8 +190,8 @@ export class StartLitElement extends LitElement {
           align-items: center;
           background-color: #000;
           opacity: ${this.params.opacity};
-          -webkit-filter: invert(${this.params.invert}%) contrast(${this.params.contrast}%);
-          filter: invert(${this.params.invert}%) contrast(${this.params.contrast}%);
+          //-webkit-filter: invert(${this.params.invert}%) ;
+          //filter: invert(${this.params.invert}%) ;
         }
 
         canvas {
@@ -190,8 +203,8 @@ export class StartLitElement extends LitElement {
             text-align: ${this.params.textAlign};
             letter-spacing: ${this.params.letterSpacing}px;
             display: block;
-            -webkit-filter: blur(${this.params.blur}px);
-            filter: blur(${this.params.blur}px);
+            // -webkit-filter: blur(${this.params.blur}px);
+            // filter: blur(${this.params.blur}px);
             text-shadow: ${this.color1.xOffset - this.mouse.x}px ${this.color1.yOffset - this.mouse.y}px ${this.color1.blurRadius}px rgba(${this.color1.color[0]}, ${this.color1.color[1]}, ${this.color1.color[2]}, ${this.color1.color[3]}), 
                          ${this.color2.xOffset - this.mouse.x}px ${this.color2.yOffset - this.mouse.y}px ${this.color2.blurRadius}px rgba(${this.color2.color[0]}, ${this.color2.color[1]}, ${this.color2.color[2]}, ${this.color2.color[3]}), 
                          ${this.color3.xOffset - this.mouse.x}px ${this.color3.yOffset - this.mouse.y}px ${this.color3.blurRadius}px rgba(${this.color3.color[0]}, ${this.color3.color[1]}, ${this.color3.color[2]}, ${this.color3.color[3]});
@@ -212,7 +225,7 @@ export class StartLitElement extends LitElement {
    */
   firstUpdated() {
       const canvasEl = this.shadowRoot.getElementById('container');
-      renderScene(canvasEl, {color1 :this.color1, color2: this.color2, color3: this.color3, params: this.params});
+      renderScene(canvasEl, {color1 :this.color1, color2: this.color2, color3: this.color3, params: this.params, bloom:this.bloom});
     // console.log('loaded');
   }
 

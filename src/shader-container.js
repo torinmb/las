@@ -60,6 +60,7 @@ export class ShaderContainer {
             fontSize: { value: 1.0 },
             letterSpacing: { value: 1.0 },
             mouseMovementSpeed: { value: 1.0 },
+            invert : { value: 1.0 },
         },
         vertexShader,
         fragmentShader: fragmentShader,
@@ -106,6 +107,8 @@ export class ShaderContainer {
         this.mesh.material.uniforms['fontSize'].value = params.fontSize;
         this.mesh.material.uniforms['letterSpacing'].value = params.letterSpacing;
         this.mesh.material.uniforms['mouseMovementSpeed'].value = params.mouseMovementSpeed;
+        
+        this.mesh.material.uniforms['invert'].value = params.invert;
         
     }
     

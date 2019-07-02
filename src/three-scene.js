@@ -1,9 +1,12 @@
 import * as THREE from 'three';
 import { ShaderContainer } from './shader-container.js';
+import { BloomEffect, EffectComposer, EffectPass, RenderPass, BrightnessContrastEffect, BlurPass, BlendFunction, SavePass} from "postprocessing";
+
 
 export const renderScene = (container, guiData) => {
     
     const scene = new THREE.Scene();
+    
     const texture = new THREE.TextureLoader().load('fonts/msdf.png');
     const camera = new THREE.PerspectiveCamera(35, container.clientWidth / container.clientHeight, 1, 1000);
     camera.position.set(0, 0, 2);
@@ -11,12 +14,13 @@ export const renderScene = (container, guiData) => {
     const raycaster = new THREE.Raycaster();
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    
     // renderer.setClearColor('0x000000');
     // render.setClearColor('0x000000');
     renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
     container.appendChild(renderer.domElement);
-
+    const composer = new EffectComposer(renderer);
     // const controls = new THREE.OrbitControls(camera, renderer.domElement);
     // controls.enableDamping = true;
     // controls.dampingFactor = 1.25;
@@ -41,6 +45,17 @@ export const renderScene = (container, guiData) => {
     pointLight.position.x = 40;
 
     window.scene = scene;
+    let bloomEffect = new BloomEffect();
+    let blurPass = new BlurPass();
+    let savePass = new SavePass();
+    let brightnessContrastEffect = new BrightnessContrastEffect({ contrast: guiData.params.contrast });
+    const effectPass = new EffectPass(camera, brightnessContrastEffect, bloomEffect);
+    effectPass.renderToScreen = true;
+
+    composer.addPass(new RenderPass(scene, camera));
+    composer.addPass(blurPass);
+    composer.addPass(effectPass);
+    
 
 
     window.addEventListener('resize', onWindowResize);
@@ -67,14 +82,25 @@ export const renderScene = (container, guiData) => {
         // }
 
         // controls.update();
+        
+        bloomEffect.distinction = guiData.bloom.distinction;
+        bloomEffect.setResolutionScale(guiData.bloom.resolutionScale);
+        console.log(guiData.params.blur, blurPass);
+        blurPass.setResolutionScale(guiData.params.blur);
+        
+        // console.log(guiData.params.contrast);
+        // brightnessContrastEffect.contrast = guiData.params.contrast;
+        brightnessContrastEffect.uniforms.get("contrast").value = guiData.params.contrast;
         shaderContainer.update({time, mouse, ...guiData});
-        renderer.render(scene, camera);
+        // renderer.render(scene, camera);
+        composer.render(time);
     }
 
     function onWindowResize() {
         camera.aspect = container.clientWidth / container.clientHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(container.clientWidth, container.clientHeight);
+        
     }
 
     function onDocumentMouseMove(event) {

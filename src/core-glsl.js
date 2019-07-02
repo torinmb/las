@@ -10,28 +10,32 @@ void main()
 }
 `;
 
-const genCharacters = (str)=> {
+export const genCharacters = (str)=> {
     let out = '';
     if(str.length > 1) {
-        //out += 'uv.x += letterSpacing;'
-    }
+        if(str.length % 2 == 0) {
+            out += 'uv.x -= .25;\n';
+        } else {
+            out += 'uv.x -= .25;\n';
+        }
+        
+    } 
     for(let i = 0; i < str.length; i++) {
         
         
         let amt = (str.length / 2 - i);
-        if(amt === 0) {
-            amt = 0.0000001;
+        if(amt === 0 || str.length == 1) {
+            amt = 0.00001;
         }
-        out += `uv.x += letterSpacing * ${amt*1.00000010};\n`
+        out += `uv.x += letterSpacing * ${amt * 1.00000000001};\n`
         let code = str.charCodeAt(i);
         out += `d = max(d, character(uv, ${code}));\n`;
-        out += `uv.x -= letterSpacing * ${amt * 1.00000010};\n`
-        
+        out += `uv.x -= letterSpacing * ${amt *1.00000000001 };\n`
     }
     return out;
 }
 
-const characters = genCharacters('LAS');
+export const characters = genCharacters('LAS');
 console.log(characters);
 // const characters = `
 //     uv.x += letterSpacing;
@@ -118,25 +122,6 @@ vec3 fromSpherical(vec3 p) {
 
 float dot2( in vec3 v ) { return dot(v,v); }
 
-float add( float d1, float d2 )
-{
-    return min(d1,d2);
-}
-
-float subtract( float d1, float d2 )
-{
-    return max(-d1,d2);
-}
-
-float intersect( float d1, float d2 )
-{
-    return max(d1,d2);
-}
-
-float shell(float d, float thickness) {
-    return abs(d)-thickness;
-}
-
 vec3 repeat3D(vec3 p, vec3 c )
 {
     return mod(p,c)-0.5*c;
@@ -153,18 +138,6 @@ float repeat1D(inout float p, float size)
 mat2 rot2(float a){
     float c = cos(a); float s = sin(a);
 	return mat2(c, s, -s, c);
-}
-
-// polynomial smooth min (k = 0.1) (from IQ)
-float smoothAdd( float a, float b, float k )
-{
-    float h = clamp( 0.5+0.5*(b-a)/k, 0.0, 1.0 );
-    return mix( b, a, h ) - k*h*(1.0-h);
-}
-
-float smoothSubtract(float a,float b, float k)
-{
-    return -smoothAdd(-a,-b,k);
 }
 
 vec2 _hash( vec2 p ) // replace this by something better
@@ -319,6 +292,8 @@ uniform float fontSize;
 uniform float letterSpacing;
 uniform float mouseMovementSpeed;
 
+uniform float invert;
+
 
 float median(float r, float g, float b) 
 {
@@ -368,9 +343,14 @@ float character(vec2 uv, int code) {
   	return sigDist;
 }
 
+float remap(float value, float inputMin, float inputMax, float outputMin, float outputMax)
+{
+    return (value - inputMin) * ((outputMax - outputMin) / (inputMax - inputMin)) + outputMin;
+}
+
 float las(vec2 uv) {
 
-    uv += noise(uv +time*0.1)*0.01;
+   // uv += noise(uv +time*0.1)*0.01;
     uv = (uv - vec2(0.5)) * fontSize + vec2(0.5);
     float d = 0.0;
     ${characters}
@@ -394,13 +374,14 @@ void main() {
     float outsideBorder = border > 0.0 ? linearstep(0.0, +border+pxSize, sd) : 1.0;
     
     vec2 mouseMovement = mouse.xy * mouseMovementSpeed;
-    sd = las(uv - shadow1Offset - mouseMovement);
+    vec2 uv2 = uv + noise(uv +time*0.1)*0.03;
+    sd = las(uv2 - shadow1Offset - mouseMovement);
     float shadow1 = shadow1Color.a*linearstep(0.0, +shadow1Blur+pxSize, sd);
-
-    sd = las(uv - shadow2Offset - mouseMovement);
+    vec2 uv3 = uv + noise(uv +time*0.1 + 100.)*0.03;
+    sd = las(uv2 - shadow2Offset - mouseMovement);
     float shadow2 = shadow2Color.a*linearstep(0.0, +shadow2Blur+pxSize, sd);
-
-    sd = las(uv - shadow3Offset - mouseMovement);
+    vec2 uv4 = uv + noise(uv +time*0.1 + 1000.)*0.03;
+    sd = las(uv4 - shadow3Offset - mouseMovement);
     float shadow3 = shadow3Color.a*linearstep(0.0, +shadow3Blur+pxSize, sd);
 
     vec4 fg = vec4(mix(borderColor, mix(bottomColor, topColor, uv.y), outsideBorder), inside);
@@ -409,7 +390,13 @@ void main() {
     o = mix(o, shadow2Color, (1.0 - inside) * shadow2);
     o = mix(o, shadow3Color, (1.0 - inside) * shadow3);
     uv = (uv - vec2(0.5)) * fontSize + vec2(0.5);
-
+    // o = vec4(vec3(invert) - o.xyz , o.a);
+    if(invert >= 0.0 && invert < 2.0) {
+        o = vec4(vec3(invert) - o.xyz , o.a);
+    }else{
+        o = vec4(o.xyz - vec3(invert - 3.), o.a);
+    }
+    
     gl_FragColor = o;
 	
 }
