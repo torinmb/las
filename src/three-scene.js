@@ -7,7 +7,7 @@ export const renderScene = (container, guiData) => {
     
     const scene = new THREE.Scene();
     
-    const texture = new THREE.TextureLoader().load('fonts/msdf.png');
+    const texture = new THREE.TextureLoader().load('fonts/msdf3.png');
     const camera = new THREE.PerspectiveCamera(35, container.clientWidth / container.clientHeight, 1, 1000);
     camera.position.set(0, 0, 2);
 
@@ -32,6 +32,8 @@ export const renderScene = (container, guiData) => {
     // container.addEventListener('mousedown', this.onMouseDown, false);
     // container.addEventListener('mouseup', this.onMouseUp, false);
     document.addEventListener('mousemove', onDocumentMouseMove, false);
+    document.addEventListener("touchstart", onTouchMove, false);
+    document.addEventListener("touchmove", onTouchMove, false);
 
     let objectsToRaycast = [];
     let shaderContainer = new ShaderContainer(1, texture);
@@ -49,7 +51,7 @@ export const renderScene = (container, guiData) => {
     let blurPass = new BlurPass();
     let savePass = new SavePass();
     let brightnessContrastEffect = new BrightnessContrastEffect({ contrast: guiData.params.contrast });
-    const effectPass = new EffectPass(camera, brightnessContrastEffect, bloomEffect);
+    const effectPass = new EffectPass(camera, bloomEffect, brightnessContrastEffect);
     effectPass.renderToScreen = true;
 
     composer.addPass(new RenderPass(scene, camera));
@@ -85,14 +87,10 @@ export const renderScene = (container, guiData) => {
         
         bloomEffect.distinction = guiData.bloom.distinction;
         bloomEffect.setResolutionScale(guiData.bloom.resolutionScale);
-        console.log(guiData.params.blur, blurPass);
         blurPass.setResolutionScale(guiData.params.blur);
         
-        // console.log(guiData.params.contrast);
-        // brightnessContrastEffect.contrast = guiData.params.contrast;
         brightnessContrastEffect.uniforms.get("contrast").value = guiData.params.contrast;
         shaderContainer.update({time, mouse, ...guiData});
-        // renderer.render(scene, camera);
         composer.render(time);
     }
 
@@ -100,6 +98,7 @@ export const renderScene = (container, guiData) => {
         camera.aspect = container.clientWidth / container.clientHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(container.clientWidth, container.clientHeight);
+        composer.setSize(container.clientWidth, container.clientHeight);
         
     }
 
@@ -107,5 +106,15 @@ export const renderScene = (container, guiData) => {
         event.preventDefault();
         mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
         mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
+    }
+
+    function onTouchMove(event) {
+
+        var pointer = event.changedTouches ? event.changedTouches[0] : event;
+
+        var rect = domElement.getBoundingClientRect();
+        mouse.x = (pointer.clientX - rect.left) / rect.width * 2 - 1;
+        mouse.y = - (pointer.clientY - rect.top) / rect.height * 2 + 1;
+
     }
 }
