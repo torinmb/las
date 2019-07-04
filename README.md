@@ -2,6 +2,9 @@
 
 A simple Hello World for LitElement.
 
+# Supported Characters
+!"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~ÄäÖöÜüẞß
+
 https://start-lit-element.firebaseapp.com/
 
 * [Quick start](#quick-start)
