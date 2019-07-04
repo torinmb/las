@@ -9,6 +9,13 @@ void main()
     gl_Position = projectionMatrix * mvPosition;
 }
 `;
+let fontData = {};
+fetch('/fonts/Helvetica-msdf.json').then(data => data.json()).then(data => {
+    fontData = data;
+    console.log(fontData);
+});
+
+//xadvance 8, 43
 
 export const genCharacters = (str)=> {
     let out = '';
@@ -18,7 +25,6 @@ export const genCharacters = (str)=> {
         } else {
             out += 'uv.x -= .25;\n';
         }
-        
     } 
     for(let i = 0; i < str.length; i++) {
         
@@ -27,16 +33,94 @@ export const genCharacters = (str)=> {
         if(amt === 0 || str.length == 1) {
             amt = 0.00001;
         }
-        out += `uv.x += letterSpacing * ${amt * 1.00000000001};\n`
         let code = str.charCodeAt(i);
+        let xAdvance = 0.0;
+        let kerning = 0.0;
+        
+        if(Object.keys(fontData).length > 0) {
+            let kernings = fontData.kernings;
+            if(i !== str.length -1) {
+                let code2 = str.charCodeAt(i+1);
+                let kerningMatch = kernings.filter(obj => obj.first == code).filter(obj => obj.second == code2)[0];
+                if(kerningMatch) {
+                    kerning = kerningMatch.amount / 43. * 1.0000001;
+                }
+            }
+            
+            let chr = fontData.chars.filter(obj => obj.id == code);
+            
+            if (chr.length === 1) {
+                
+                chr = chr[0];
+                console.log('chr', chr);
+                xAdvance = chr.xadvance / 43.0;
+                console.log(xAdvance);
+            }
+        }
+        //amt = 0.00000001;
+         xAdvance = 0.0; kerning = 0.0;
+        out += `uv.x += letterSpacing * ${amt * 1.00000000001 };\n`
+        
         out += `d = max(d, character(uv, ${code}));\n`;
-        out += `uv.x -= letterSpacing * ${amt *1.00000000001 };\n`
+        out += `uv.x -= letterSpacing * ${amt *1.00000000001 +xAdvance + kerning};\n`
     }
     return out;
 }
 
-export const characters = genCharacters('LAS');
-console.log(characters);
+window.characters = `
+vec2 uv3 = uv;
+uv.x -= .25;
+uv.x += letterSpacing * 4.5000000000450004;
+d = max(d, character(uv, 76));
+uv.x -= letterSpacing * 4.5000000000450004;
+uv.x += letterSpacing * 3.500000000035;
+d = max(d, character(uv, 105));
+uv.x -= letterSpacing * 3.500000000035;
+uv.x += letterSpacing * 2.500000000025;
+d = max(d, character(uv, 103));
+uv.x -= letterSpacing * 2.500000000025;
+uv.x += letterSpacing * 1.500000000015;
+d = max(d, character(uv, 104));
+uv.x -= letterSpacing * 1.500000000015;
+uv.x += letterSpacing * 0.500000000005;
+d = max(d, character(uv, 116));
+uv.x -= letterSpacing * 0.500000000005;
+uv.x += letterSpacing * -0.500000000005;
+d = max(d, character(uv, 32));
+uv.x -= letterSpacing * -0.500000000005;
+uv.x += letterSpacing * -1.500000000015;
+d = max(d, character(uv, 65));
+uv.x -= letterSpacing * -1.500000000015;
+uv.x += letterSpacing * -2.500000000025;
+d = max(d, character(uv, 114));
+uv.x -= letterSpacing * -2.500000000025;
+uv.x += letterSpacing * -3.500000000035;
+d = max(d, character(uv, 116));
+uv.x -= letterSpacing * -3.500000000035;
+
+
+vec2 uv2 = uv;
+uv2.x -= .25;
+uv2.x += letterSpacing * 2.500000000025;
+float d2 = character(uv2, 83);
+uv2.x -= letterSpacing * 2.500000000025;
+uv2.x += letterSpacing * 1.500000000015;
+d2 = max(d2, character(uv2, 112));
+uv2.x -= letterSpacing * 1.500000000015;
+uv2.x += letterSpacing * 0.500000000005;
+d2 = max(d2, character(uv2, 97));
+uv2.x -= letterSpacing * 0.500000000005;
+uv2.x += letterSpacing * -0.500000000005;
+d2 = max(d2, character(uv2, 99));
+uv2.x -= letterSpacing * -0.500000000005;
+uv2.x += letterSpacing * -1.500000000015;
+d2 = max(d2, character(uv2, 101));
+
+//d = mix(d, noise(vec3(uv3 *1000. +time, 1.0))*0.3 , nsin(time));
+`;
+window.characters = genCharacters('LAS');
+// export let characters = genCharacters('LAS');
+// console.log(characters);
 // const characters = `
 //     uv.x += letterSpacing;
 //     d = character(uv, 76);
@@ -46,7 +130,7 @@ console.log(characters);
 //     d = max(d, character(uv, 83));
 // `;
 
-export const sculptureStarterCode = `
+export let sculptureStarterCode = () => `
 uniform mat4 projectionMatrix;
 uniform float time;
 uniform float opacity;
@@ -349,11 +433,11 @@ float remap(float value, float inputMin, float inputMax, float outputMin, float 
 }
 
 float las(vec2 uv) {
-
-   // uv += noise(uv +time*0.1)*0.01;
+    
+    //uv += noise(uv *1000.+ time*0.1)*0.01;
     uv = (uv - vec2(0.5)) * fontSize + vec2(0.5);
     float d = 0.0;
-    ${characters}
+    ${window.characters}
   	return d;
 }
 
@@ -389,6 +473,7 @@ void main() {
     o = mix(o, shadow1Color, (1.0 - inside) * shadow1);
     o = mix(o, shadow2Color, (1.0 - inside) * shadow2);
     o = mix(o, shadow3Color, (1.0 - inside) * shadow3);
+    
     uv = (uv - vec2(0.5)) * fontSize + vec2(0.5);
     // o = vec4(vec3(invert) - o.xyz , o.a);
     if(invert >= 0.0 && invert < 2.0) {

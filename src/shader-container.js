@@ -4,11 +4,12 @@ import { defaultVertexSource, sculptureStarterCode, fragFooter} from './core-gls
 
 export class ShaderContainer {
     constructor(size, fontTexture) {
+        
         this.size = size
         this.vertexShader = defaultVertexSource;
         this.fontTexture = fontTexture;
         // this.geometry = new THREE.BoxGeometry(size, size, size);
-        let fragSource = sculptureStarterCode + fragFooter;
+        let fragSource = sculptureStarterCode() + fragFooter;
         this.fragmentShader = fragSource;
         this.geometry = new THREE.PlaneBufferGeometry(2, 2, 1);
         // this.geometry = new THREE.SphereBufferGeometry(size, 400, 400);
@@ -24,6 +25,7 @@ export class ShaderContainer {
         this.scale = size;
         
         this.setOpacity(1.0);
+        window.refreshMaterial = this.refreshMaterial.bind(this);
     }
 
     selectedSculpture(selected) {
@@ -77,7 +79,8 @@ export class ShaderContainer {
     }
 
     refreshMaterial() {
-        this.mesh.material = this.generateMaterial(this.vertexShader, this.fragmentShader);
+        console.log(window.characters);
+        this.mesh.material = this.generateMaterial(this.vertexShader, sculptureStarterCode() + fragFooter);
     }
 
     update(payload) {
