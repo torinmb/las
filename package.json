@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "renderer",
   "repository": "https://github.com/PolymerLabs/start-lit-element.git",
-  "main": "renderer.js",
+  "main": "shader-renderer.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

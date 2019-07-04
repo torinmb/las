@@ -1,9 +1,9 @@
 {
-  "shell": "src/renderer.js",
+  "shell": "src/shader-renderer.js",
   "entrypoint": "index.html",
   "npm": true,
   "moduleResolution": "node",
-  "sources": ["src/renderer.js", "src/shader-renderer.js", "manifest/**", "manifest.json", "package.json"],
+  "sources": ["src/shader-renderer.js","src/css-renderer.js" , "manifest/**","fonts/**", "manifest.json", "package.json"],
   "extraDependencies": [
     "robots.txt",
     "node_modules/@webcomponents/webcomponentsjs/**"

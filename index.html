@@ -22,14 +22,14 @@
     window.WebComponents = window.WebComponents || { 
       waitFor(cb){ addEventListener('WebComponentsReady', cb) }
     } 
-    WebComponents.waitFor(async () => { 
-      import('./src/css-renderer.js');
-    });
+    // WebComponents.waitFor(async () => { 
+    //   import('./src/css-renderer.js');
+    // });
     WebComponents.waitFor(async () => {
         import('./src/shader-renderer.js');
       });
   </script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image/2.6.0/dom-to-image.js"></script>
+  <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image/2.6.0/dom-to-image.js"></script> -->
   <!-- Change stuff here for your app -->
   <meta name="Light Art Studio" content="renderer">
   <meta name="theme-color" content="#ffffff">
