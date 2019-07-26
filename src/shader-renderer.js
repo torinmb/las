@@ -63,39 +63,48 @@ export class StartLitElement extends LitElement {
     }
 
     this.params = {
-      blur: .5,
+      blur: 1.0,
       contrast: 0.8,
+      brightness: 0.0,
       invert: 3.0,
-      fontSize: 3.0,
+      fontSize: 17.0,
       letterSpacing: 0.45,
       opacity: 1,
       textAlign: 'center',
       text: 'LAS',
       mouseMovementSpeed: 0.02,
-      downloadSVG: () => this.downloadSVG.bind(this)
+      backgroundColor: 0.0
+    }
+
+    this.export = {
+      width: 4096,
+      height: 2160,
+      downloadPNG: () => this.downloadPNG()
     }
 
     let mobileCheck = false;
     (function (a) { if (/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino/i.test(a) || /1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(a.substr(0, 4))) mobileCheck = true; })(navigator.userAgent || navigator.vendor || window.opera);
 
     if(mobileCheck) {
-        this.params.blur = 0.2;
-        this.params.fontSize = 5.0;
+        this.params.blur = 1.33;
+        this.params.fontSize = 15.0;
     }
 
     this.bloom = {
-        distinction : 2.0,
-	    resolutionScale: 0.5
+      distinction : 2.0,
+      resolutionScale: 0.5,
+      opacity: 1.0
     }
 
 
     this.gui = new dat.GUI();
+    this.gui.remember(this.export);
     this.gui.remember(this.params);
     this.gui.remember(this.color1);
     this.gui.remember(this.color2);
     this.gui.remember(this.color3);
     this.gui.remember(this.bloom);
-    let el = (this.gui.domElement.style.display = 'none');
+    // let el = (this.gui.domElement.style.display = 'none');
     document.querySelector('.dg').style.zIndex = 999;
     window.addEventListener('mousemove', this.onDocumentMouseMove.bind(this), false);
 
@@ -111,21 +120,28 @@ export class StartLitElement extends LitElement {
     let bloom = this.gui.addFolder('Bloom');
     bloom.add(this.bloom, 'distinction', 0.0, 2.0)
         .onChange(() => this.requestUpdate());
-    bloom.add(this.bloom, 'resolutionScale', 0.0, 2.0)
+    bloom.add(this.bloom, 'resolutionScale', 0.0, 10.0)
         .onChange(() => this.requestUpdate());
+    bloom.add(this.bloom, 'opacity', 0.0, 1.0)
+      .onChange(() => this.requestUpdate());
 
     
     this.gui.add(this.params, 'blur', 0.0, 1.5)
       .onChange(() => this.requestUpdate());
     this.gui.add(this.params, 'contrast', 0.0, 1.0)
       .onChange(() => this.requestUpdate());
-    this.gui.add(this.params, 'invert', 0.0, 4.0)
-      .onChange(() => this.requestUpdate());
+    // this.gui.add(this.params, 'brightness', -1.0, 1.0)
+    //   .onChange(() => this.requestUpdate());
+    this.gui.add(this.params, 'invert', 0.0, 3.5)
+      .onChange(() => {
+        this.params.backgroundColor = 255 * ((3.0 - this.params.invert));
+        this.requestUpdate();
+      });
 
     // this.gui.add(this.params, 'opacity', 0.0, 1.0)
     //   .onChange(() => this.requestUpdate());
 
-    this.gui.add(this.params, 'fontSize', -1.0, 30.0)
+    this.gui.add(this.params, 'fontSize', 0, 20.0)
       .onChange(() => this.requestUpdate());
     this.gui.add(this.params, 'letterSpacing', -2.0, 2.0)
       .onChange(() => this.requestUpdate());
@@ -134,12 +150,18 @@ export class StartLitElement extends LitElement {
     this.gui.add(this.params, 'text')
       .onChange(() => {
           let chrs = genCharacters(this.params.text);
-          console.log(chrs);
+          
           window.characters = chrs;
           window.refreshMaterial();
     });
-    this.gui.add(this.params, 'mouseMovementSpeed', 0., 0.5);
-    // this.gui.add(this.params, 'downloadSVG');
+    this.gui.add(this.params, 'mouseMovementSpeed', 0., 0.1);
+    // this.gui.add(this.params, 'downloadPNG');
+
+    let exportFolder = this.gui.addFolder('Export');
+    exportFolder.add(this.export, 'width', 0, 10000);
+    exportFolder.add(this.export, 'height', 0, 10000);
+    exportFolder.add(this.export, 'downloadPNG');
+
   }
 
   initColorUI(folder, param) {
@@ -213,12 +235,15 @@ export class StartLitElement extends LitElement {
             color: #fff;
             width: 100%;
             font-weight: bold;
+            background-color: rgb(${this.params.backgroundColor}, ${this.params.backgroundColor}, ${this.params.backgroundColor});
             font-size: ${this.params.fontSize}px;
             text-align: ${this.params.textAlign};
             letter-spacing: ${this.params.letterSpacing}px;
             display: block;
             // -webkit-filter: blur(${this.params.blur}px);
             // filter: blur(${this.params.blur}px);
+            -webkit-filter: contrast(${this.params.contrast * 500}%);
+            filter: contrast(${this.params.contrast * 500}%);
             text-shadow: ${this.color1.xOffset - this.mouse.x}px ${this.color1.yOffset - this.mouse.y}px ${this.color1.blurRadius}px rgba(${this.color1.color[0]}, ${this.color1.color[1]}, ${this.color1.color[2]}, ${this.color1.color[3]}), 
                          ${this.color2.xOffset - this.mouse.x}px ${this.color2.yOffset - this.mouse.y}px ${this.color2.blurRadius}px rgba(${this.color2.color[0]}, ${this.color2.color[1]}, ${this.color2.color[2]}, ${this.color2.color[3]}), 
                          ${this.color3.xOffset - this.mouse.x}px ${this.color3.yOffset - this.mouse.y}px ${this.color3.blurRadius}px rgba(${this.color3.color[0]}, ${this.color3.color[1]}, ${this.color3.color[2]}, ${this.color3.color[3]});
@@ -239,8 +264,22 @@ export class StartLitElement extends LitElement {
    */
   firstUpdated() {
       const canvasEl = this.shadowRoot.getElementById('container');
-      renderScene(canvasEl, {color1 :this.color1, color2: this.color2, color3: this.color3, params: this.params, bloom:this.bloom});
+      let {downloadScreenShot} = renderScene(canvasEl, {color1 :this.color1, 
+                             color2: this.color2, 
+                             color3: this.color3, 
+                             params: this.params, 
+                             bloom:this.bloom,
+                             export: this.export
+                            });
+      this.downloadScreenShot = downloadScreenShot;
     // console.log('loaded');
+  }
+
+  downloadPNG() {
+    console.log('this.downloadScreenShot', this.downloadScreenShot)
+    if(this.downloadScreenShot) {
+      this.downloadScreenShot(this.export.width, this.export.height);
+    }
   }
 
   onDocumentMouseMove(event) {
