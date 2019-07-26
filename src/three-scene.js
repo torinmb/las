@@ -48,14 +48,16 @@ export const renderScene = (container, guiData) => {
 
     window.scene = scene;
     let bloomEffect = new BloomEffect();
+    window.bloomEffect = bloomEffect;
     let blurPass = new BlurPass();
     let savePass = new SavePass();
     let brightnessContrastEffect = new BrightnessContrastEffect({ contrast: guiData.params.contrast });
-    const effectPass = new EffectPass(camera, bloomEffect, brightnessContrastEffect);
+    const effectPass = new EffectPass(camera, bloomEffect);
     effectPass.renderToScreen = true;
 
     composer.addPass(new RenderPass(scene, camera));
     composer.addPass(blurPass);
+    // composer.addPass(savePass);
     composer.addPass(effectPass);
     
 
@@ -86,10 +88,32 @@ export const renderScene = (container, guiData) => {
         // controls.update();
         
         bloomEffect.distinction = guiData.bloom.distinction;
+        bloomEffect.blendMode.opacity.value = guiData.bloom.opacity;
         bloomEffect.setResolutionScale(guiData.bloom.resolutionScale);
-        blurPass.setResolutionScale(guiData.params.blur);
+        blurPass.setResolutionScale(1.5 - guiData.params.blur);
         
         brightnessContrastEffect.uniforms.get("contrast").value = guiData.params.contrast;
+        brightnessContrastEffect.uniforms.get("brightness").value = guiData.params.brightness;
+
+        window.brightnessContrastEffect = brightnessContrastEffect;
+        // brightnessContrastEffect.fragmentShader = "uniform float brightness;uniform float contrast;void mainImage(const in vec4 inputColor,const in vec2 uv,out vec4 outputColor){outputColor = clamp(vec4((inputColor.rgb - vec3(0.5)) * contrast + vec3(0.5), inputColor.a), 0.0, 1.0);}";
+        brightnessContrastEffect.fragmentShader = "uniform float brightness;uniform float contrast;void mainImage(const in vec4 inputColor,const in vec2 uv,out vec4 outputColor){vec3 col = pow(abs(inputColor.rgb * 2. - 1.), 1. / max(vec3(contrast), vec3(0.0001)) * sign(inputColor.rgb - 0.5) + 0.5;outputColor = vec4(col, inputColor.a);}"
+//         brightnessContrastEffect.fragmentShader =`uniform float brightness;
+// uniform float contrast;
+// void mainImage(const in vec4 inputColor,const in vec2 uv,out vec4 outputColor){
+//     vec4 o = inputColor;
+//     // if(brightness >= 0.0 && brightness < 2.0) {
+//     //     o = vec4(vec3(brightness) - o.xyz , o.a);
+//     // } else{
+//     //     o = vec4(o.xyz - vec3(brightness - 3.), o.a);
+//     // }
+
+//     vec3 col = pow(abs(o.rgb * 2. - 1.), 1. / max(vec3(contrast), vec3(0.0001)) * sign(o.rgb - 0.5) + 0.5;
+    
+//     outputColor = vec4(col, o.a);
+// }`;
+        // brightnessContrastEffect.fragmentShader = "uniform float brightness;uniform float contrast;void mainImage(const in vec4 inputColor,const in vec2 uv,out vec4 outputColor){vec3 color=inputColor.rgb;color *= contrast; outputColor=vec4(color,1.0),inputColor.a);}" fragColor = clamp(dstColor, 0.0, 1.0);
+        // vec4 dstColor = vec4((srcColor.rgb - vec3(0.5)) * contrast + vec3(0.5), 1.0);
         shaderContainer.update({time, mouse, ...guiData});
         composer.render(time);
     }
@@ -112,7 +136,7 @@ export const renderScene = (container, guiData) => {
 
         var pointer = event.changedTouches ? event.changedTouches[0] : event;
 
-        var rect = domElement.getBoundingClientRect();
+        var rect = container.getBoundingClientRect();
         mouse.x = (pointer.clientX - rect.left) / rect.width * 2 - 1;
         mouse.y = - (pointer.clientY - rect.top) / rect.height * 2 + 1;
 
