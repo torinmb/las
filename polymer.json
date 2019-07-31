@@ -13,7 +13,7 @@
     "js": { 
       "minify": true,
       "compile": "es5",
-      "transformModulesToAmd": false
+      "transformModulesToAmd": true
     },
     "css": {
       "minify": true
