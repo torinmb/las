@@ -1,19 +1,20 @@
 import * as THREE from 'three';
 import { ShaderContainer } from './shader-container.js';
 import { BloomEffect, EffectComposer, EffectPass, RenderPass, BrightnessContrastEffect, BlurPass, BlendFunction, SavePass} from "postprocessing";
-
+import { InvertEffect} from './invert-effect.js';
 
 export const renderScene = (container, guiData) => {
-    
+    window.guiData = guiData;
     const scene = new THREE.Scene();
     
     const texture = new THREE.TextureLoader().load('fonts/msdf3.png');
     const camera = new THREE.PerspectiveCamera(35, container.clientWidth / container.clientHeight, 1, 1000);
     camera.position.set(0, 0, 2);
+    guiData.params.resolution = new THREE.Vector2(container.clientWidth, container.clientHeight);
 
     const raycaster = new THREE.Raycaster();
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer : true });
     
     // renderer.setClearColor('0x000000');
     // render.setClearColor('0x000000');
@@ -52,21 +53,27 @@ export const renderScene = (container, guiData) => {
     let blurPass = new BlurPass();
     let savePass = new SavePass();
     let brightnessContrastEffect = new BrightnessContrastEffect({ contrast: guiData.params.contrast });
-    const effectPass = new EffectPass(camera, bloomEffect);
+    
+    let invertEffect = new InvertEffect({ invert: guiData.params.invert });
+    const effectPass = new EffectPass(camera, bloomEffect, brightnessContrastEffect, invertEffect);
+    
+
     effectPass.renderToScreen = true;
 
     composer.addPass(new RenderPass(scene, camera));
     composer.addPass(blurPass);
     // composer.addPass(savePass);
     composer.addPass(effectPass);
+    composer.addPass(new RenderPass(scene, camera));
     
 
-
+    let t = 0.0;
     window.addEventListener('resize', onWindowResize);
     renderer.setAnimationLoop((time) => renderScene(time));
 
     function renderScene(time) {
         raycaster.setFromCamera(mouse, camera);
+        t = time;
         // let intersects = raycaster.intersectObjects(objectsToRaycast);
         // if (intersects.length > 0) {
         //     const firstIntersect = intersects[0].object;
@@ -90,40 +97,29 @@ export const renderScene = (container, guiData) => {
         bloomEffect.distinction = guiData.bloom.distinction;
         bloomEffect.blendMode.opacity.value = guiData.bloom.opacity;
         bloomEffect.setResolutionScale(guiData.bloom.resolutionScale);
-        blurPass.setResolutionScale(1.5 - guiData.params.blur);
-        
+        blurPass.setResolutionScale(1.5 - (guiData.params.blur));
+        brightnessContrastEffect.fragmentShader = `
+        uniform float brightness;
+        uniform float contrast;
+        void mainImage(const in vec4 inputColor,const in vec2 uv,out vec4 outputColor){
+            outputColor = inputColor * contrast;
+        }`;
         brightnessContrastEffect.uniforms.get("contrast").value = guiData.params.contrast;
-        brightnessContrastEffect.uniforms.get("brightness").value = guiData.params.brightness;
-
-        window.brightnessContrastEffect = brightnessContrastEffect;
-        // brightnessContrastEffect.fragmentShader = "uniform float brightness;uniform float contrast;void mainImage(const in vec4 inputColor,const in vec2 uv,out vec4 outputColor){outputColor = clamp(vec4((inputColor.rgb - vec3(0.5)) * contrast + vec3(0.5), inputColor.a), 0.0, 1.0);}";
-        brightnessContrastEffect.fragmentShader = "uniform float brightness;uniform float contrast;void mainImage(const in vec4 inputColor,const in vec2 uv,out vec4 outputColor){vec3 col = pow(abs(inputColor.rgb * 2. - 1.), 1. / max(vec3(contrast), vec3(0.0001)) * sign(inputColor.rgb - 0.5) + 0.5;outputColor = vec4(col, inputColor.a);}"
-//         brightnessContrastEffect.fragmentShader =`uniform float brightness;
-// uniform float contrast;
-// void mainImage(const in vec4 inputColor,const in vec2 uv,out vec4 outputColor){
-//     vec4 o = inputColor;
-//     // if(brightness >= 0.0 && brightness < 2.0) {
-//     //     o = vec4(vec3(brightness) - o.xyz , o.a);
-//     // } else{
-//     //     o = vec4(o.xyz - vec3(brightness - 3.), o.a);
-//     // }
-
-//     vec3 col = pow(abs(o.rgb * 2. - 1.), 1. / max(vec3(contrast), vec3(0.0001)) * sign(o.rgb - 0.5) + 0.5;
-    
-//     outputColor = vec4(col, o.a);
-// }`;
-        // brightnessContrastEffect.fragmentShader = "uniform float brightness;uniform float contrast;void mainImage(const in vec4 inputColor,const in vec2 uv,out vec4 outputColor){vec3 color=inputColor.rgb;color *= contrast; outputColor=vec4(color,1.0),inputColor.a);}" fragColor = clamp(dstColor, 0.0, 1.0);
-        // vec4 dstColor = vec4((srcColor.rgb - vec3(0.5)) * contrast + vec3(0.5), 1.0);
+        // brightnessContrastEffect.uniforms.get("brightness").value = guiData.params.brightness;
+        invertEffect.uniforms.get('invert').value = guiData.params.invert;
+        
         shaderContainer.update({time, mouse, ...guiData});
         composer.render(time);
     }
 
     function onWindowResize() {
-        camera.aspect = container.clientWidth / container.clientHeight;
+        let width = container.clientWidth;
+        let height = container.clientHeight;
+        camera.aspect = width / height;
         camera.updateProjectionMatrix();
-        renderer.setSize(container.clientWidth, container.clientHeight);
-        composer.setSize(container.clientWidth, container.clientHeight);
-        
+        renderer.setSize(width, height);
+        composer.setSize(width, height);
+        guiData.params.resolution.set(width, height);
     }
 
     function onDocumentMouseMove(event) {
@@ -136,59 +132,51 @@ export const renderScene = (container, guiData) => {
 
         var pointer = event.changedTouches ? event.changedTouches[0] : event;
 
-        var rect = container.getBoundingClientRect();
+    var rect = container.getBoundingClientRect();
         mouse.x = (pointer.clientX - rect.left) / rect.width * 2 - 1;
         mouse.y = - (pointer.clientY - rect.top) / rect.height * 2 + 1;
 
     }
 
-    function dataURIToBlob(dataURI) {
-        const binStr = window.atob(dataURI.split(',')[1]);
-        const len = binStr.length;
-        const arr = new Uint8Array(len);
-        for (let i = 0; i < len; i++) {
-            arr[i] = binStr.charCodeAt(i);
-        }
-        return new window.Blob([arr]);
-    }
-
-    function saveDataURI(name, dataURI) {
-        const blob = dataURIToBlob(dataURI);
-
-        // force download
-        const link = document.createElement('a');
-        link.download = name;
-        link.href = window.URL.createObjectURL(blob);
-        link.onclick = () => {
-            window.setTimeout(() => {
-                window.URL.revokeObjectURL(blob);
-                link.removeAttribute('href');
-            }, 500);
-        };
-        link.click();
-    }
-
     function defaultFileName(ext) {
-        const str = `${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}${ext}`;
+        const str = `LAS Export ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}${ext}`;
         return str.replace(/\//g, '-').replace(/:/g, '.');
     }
 
     function downloadScreenShot(width, height) {
-
-        // set camera and renderer to desired screenshot dimension
+        const renderer = composer.getRenderer();
+		const originalSize = renderer.getSize(new THREE.Vector2());
         camera.aspect = width / height;
         camera.updateProjectionMatrix();
-        renderer.setSize(width, height);
+		
+        composer.setSize(width, height);
+        guiData.params.resolution.set(width, height);
+        shaderContainer.update({ t, mouse, ...guiData });
+		composer.render(t);
 
-        renderer.render(scene, camera, null, false);
+		// Data URL doesn't work because the image data is too big.
+		renderer.domElement.toBlob((blob) => {
 
-        const DataURI = renderer.domElement.toDataURL('image/png');
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement("a");
+            a.setAttribute("download", defaultFileName('.png'));
+			a.href = url;
+			a.click();
 
-        // save
-        saveDataURI(defaultFileName('.png'), DataURI);
-        // reset to old dimensions by invoking the on window resize function
-        onWindowResize();
+			URL.revokeObjectURL(url);
+
+			// Restore the original resolution.
+			composer.setSize(originalSize.width, originalSize.height);
+            camera.aspect = originalSize.width / originalSize.height;
+            camera.updateProjectionMatrix();
+            guiData.params.resolution.set(originalSize.width, originalSize.height);
+            shaderContainer.update({ t, mouse, ...guiData });
+            composer.render(t);
+
+		});
+
     }
+
 
     return { downloadScreenShot};
     
