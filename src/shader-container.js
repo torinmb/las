@@ -41,6 +41,7 @@ export class ShaderContainer {
         // return new THREE.MeshBasicMaterial( {color: 0xffff00} );
       const material = new THREE.ShaderMaterial({
         uniforms: {
+            resolution: { value: new THREE.Vector2() },
             time: {value: 0.0},
             mouse: {value: new THREE.Vector3(0.5,0.5,0.5)},
             opacity: {value: 1.0},
@@ -85,6 +86,7 @@ export class ShaderContainer {
 
     update(payload) {
         let {time, mouse, color1, color2, color3, params} = payload;
+        this.mesh.material.uniforms['resolution'].value = params.resolution;
         this.mesh.material.uniforms['time'].value = time * 0.001;
         this.mesh.material.uniforms['mouse'].value = [mouse.x, mouse.y, 1.0];
         this.mesh.material.uniforms['sculptureCenter'].value = this.mesh.position;
