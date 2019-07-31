@@ -65,7 +65,7 @@ export class StartLitElement extends LitElement {
     this.params = {
       blur: 1.0,
       contrast: 0.8,
-      brightness: 0.0,
+      brightness: 3.0,
       invert: 3.0,
       fontSize: 17.0,
       letterSpacing: 0.45,
@@ -73,7 +73,8 @@ export class StartLitElement extends LitElement {
       textAlign: 'center',
       text: 'LAS',
       mouseMovementSpeed: 0.02,
-      backgroundColor: 0.0
+      backgroundColor: 0.0,
+      resolution: [0, 0]
     }
 
     this.export = {
@@ -120,18 +121,18 @@ export class StartLitElement extends LitElement {
     let bloom = this.gui.addFolder('Bloom');
     bloom.add(this.bloom, 'distinction', 0.0, 2.0)
         .onChange(() => this.requestUpdate());
-    bloom.add(this.bloom, 'resolutionScale', 0.0, 10.0)
+    bloom.add(this.bloom, 'resolutionScale', 0.0, 2.0)
         .onChange(() => this.requestUpdate());
     bloom.add(this.bloom, 'opacity', 0.0, 1.0)
       .onChange(() => this.requestUpdate());
 
     
     this.gui.add(this.params, 'blur', 0.0, 1.5)
+      .onChange(() => this.requestUpdate()).listen();
+    this.gui.add(this.params, 'contrast', -1.0, 1.0)
       .onChange(() => this.requestUpdate());
-    this.gui.add(this.params, 'contrast', 0.0, 1.0)
+    this.gui.add(this.params, 'brightness', 0.0, 3.5)
       .onChange(() => this.requestUpdate());
-    // this.gui.add(this.params, 'brightness', -1.0, 1.0)
-    //   .onChange(() => this.requestUpdate());
     this.gui.add(this.params, 'invert', 0.0, 3.5)
       .onChange(() => {
         this.params.backgroundColor = 255 * ((3.0 - this.params.invert));
@@ -141,8 +142,11 @@ export class StartLitElement extends LitElement {
     // this.gui.add(this.params, 'opacity', 0.0, 1.0)
     //   .onChange(() => this.requestUpdate());
 
-    this.gui.add(this.params, 'fontSize', 0, 20.0)
-      .onChange(() => this.requestUpdate());
+    this.gui.add(this.params, 'fontSize', 0.0, 20.0)
+      .onChange((val) => {
+        this.params.blur = val/15;
+        this.requestUpdate()
+      });
     this.gui.add(this.params, 'letterSpacing', -2.0, 2.0)
       .onChange(() => this.requestUpdate());
     // this.gui.add(this.params, 'textAlign', ['left', 'center', 'right', 'justify'])
@@ -153,7 +157,8 @@ export class StartLitElement extends LitElement {
           
           window.characters = chrs;
           window.refreshMaterial();
-    });
+    }).listen();
+
     this.gui.add(this.params, 'mouseMovementSpeed', 0., 0.1);
     // this.gui.add(this.params, 'downloadPNG');
 
@@ -242,8 +247,8 @@ export class StartLitElement extends LitElement {
             display: block;
             // -webkit-filter: blur(${this.params.blur}px);
             // filter: blur(${this.params.blur}px);
-            -webkit-filter: contrast(${this.params.contrast * 500}%);
-            filter: contrast(${this.params.contrast * 500}%);
+            // -webkit-filter: contrast(${this.params.contrast * 500}%);
+            // filter: contrast(${this.params.contrast * 500}%);
             text-shadow: ${this.color1.xOffset - this.mouse.x}px ${this.color1.yOffset - this.mouse.y}px ${this.color1.blurRadius}px rgba(${this.color1.color[0]}, ${this.color1.color[1]}, ${this.color1.color[2]}, ${this.color1.color[3]}), 
                          ${this.color2.xOffset - this.mouse.x}px ${this.color2.yOffset - this.mouse.y}px ${this.color2.blurRadius}px rgba(${this.color2.color[0]}, ${this.color2.color[1]}, ${this.color2.color[2]}, ${this.color2.color[3]}), 
                          ${this.color3.xOffset - this.mouse.x}px ${this.color3.yOffset - this.mouse.y}px ${this.color3.blurRadius}px rgba(${this.color3.color[0]}, ${this.color3.color[1]}, ${this.color3.color[2]}, ${this.color3.color[3]});
@@ -264,15 +269,18 @@ export class StartLitElement extends LitElement {
    */
   firstUpdated() {
       const canvasEl = this.shadowRoot.getElementById('container');
-      let {downloadScreenShot} = renderScene(canvasEl, {color1 :this.color1, 
-                             color2: this.color2, 
-                             color3: this.color3, 
-                             params: this.params, 
-                             bloom:this.bloom,
-                             export: this.export
-                            });
+      let {downloadScreenShot} = renderScene(canvasEl, {
+        color1 :this.color1, 
+        color2: this.color2, 
+        color3: this.color3, 
+        params: this.params, 
+        bloom:this.bloom,
+        export: this.export
+      });
+
+      window.refreshMaterial();
+      window.text = this.params.text;
       this.downloadScreenShot = downloadScreenShot;
-    // console.log('loaded');
   }
 
   downloadPNG() {
