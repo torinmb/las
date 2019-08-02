@@ -128,7 +128,7 @@ export class ShaderContainer {
         this.mesh.material.uniforms['shadow2NoiseSpeed'].value = color2.speed;
         this.mesh.material.uniforms['shadow2NoiseScale'].value = color2.scale;
         this.mesh.material.uniforms['shadow2NoiseAmplitude'].value = color2.amplitude;
-        this.mesh.material.uniforms['shadow2NoiseEnabled'].value = color1.noiseEnabled;
+        this.mesh.material.uniforms['shadow2NoiseEnabled'].value = color2.noiseEnabled;
 
         this.mesh.material.uniforms['shadow3Offset'].value = [color3.xOffset, color3.yOffset];
         let c3 = color3.color;
@@ -137,7 +137,7 @@ export class ShaderContainer {
         this.mesh.material.uniforms['shadow3NoiseSpeed'].value = color3.speed;
         this.mesh.material.uniforms['shadow3NoiseScale'].value = color3.scale;
         this.mesh.material.uniforms['shadow3NoiseAmplitude'].value = color3.amplitude;
-        this.mesh.material.uniforms['shadow3NoiseEnabled'].value = color1.noiseEnabled;
+        this.mesh.material.uniforms['shadow3NoiseEnabled'].value = color3.noiseEnabled;
 
         this.mesh.material.uniforms['fontSize'].value = 20. - params.fontSize;
         this.mesh.material.uniforms['letterSpacing'].value = params.letterSpacing;
