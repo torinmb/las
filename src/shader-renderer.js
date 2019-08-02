@@ -69,6 +69,7 @@ export class StartLitElement extends LitElement {
       invert: 3.0,
       fontSize: 17.0,
       letterSpacing: 0.45,
+      lineHeight: 0.45,
       opacity: 1,
       textAlign: 'center',
       text: 'LAS',
@@ -149,14 +150,22 @@ export class StartLitElement extends LitElement {
       });
     this.gui.add(this.params, 'letterSpacing', -2.0, 2.0)
       .onChange(() => this.requestUpdate());
-    // this.gui.add(this.params, 'textAlign', ['left', 'center', 'right', 'justify'])
-    //   .onChange(() => this.requestUpdate());
+    this.gui.add(this.params, 'lineHeight', -2.0, 2.0)
+      .onChange(() => this.requestUpdate());
+    
+    this.gui.add(this.params, 'textAlign', ['left', 'center', 'right'])
+      .onChange(() => {
+        this.requestUpdate();
+        let chrs = genCharacters(this.params.text, this.params.textAlign);
+        window.characters = chrs;
+        window.refreshMaterial();
+      });
     this.gui.add(this.params, 'text')
       .onChange(() => {
-          let chrs = genCharacters(this.params.text);
+        let chrs = genCharacters(this.params.text, this.params.textAlign);
           
-          window.characters = chrs;
-          window.refreshMaterial();
+        window.characters = chrs;
+        window.refreshMaterial();
     }).listen();
 
     this.gui.add(this.params, 'mouseMovementSpeed', 0., 0.1);
