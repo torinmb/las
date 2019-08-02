@@ -498,18 +498,24 @@ void main() {
     vec2 uv2 = uv;
     if(shadow1NoiseEnabled) {
         uv2 += noise(uv*shadow1NoiseScale +time*shadow1NoiseSpeed)*shadow1NoiseAmplitude*fontSizeMap;
+    } else { 
+        uv2.x += sin(shadow1NoiseScale +time*shadow1NoiseSpeed)*shadow1NoiseAmplitude*fontSizeMap;
     }
     sd = las(uv2 - shadow1Offset - mouseMovement);
     float shadow1 = shadow1Color.a*linearstep(0.0, +shadow1Blur+pxSize, sd);
     vec2 uv3 = uv;
     if(shadow2NoiseEnabled) {
         uv3 += noise(uv*shadow2NoiseScale +time*shadow2NoiseSpeed + 100.)*shadow2NoiseAmplitude*fontSizeMap;
+    } else { 
+        uv3.x += sin(shadow2NoiseScale +time*shadow2NoiseSpeed)*shadow2NoiseAmplitude*fontSizeMap;
     }
     sd = las(uv3 - shadow2Offset - mouseMovement);
     float shadow2 = shadow2Color.a*linearstep(0.0, +shadow2Blur+pxSize, sd);
     vec2 uv4 = uv;
     if(shadow3NoiseEnabled) {
         uv4 += noise(uv*shadow3NoiseScale +time*shadow3NoiseSpeed + 1000.)*shadow3NoiseAmplitude*fontSizeMap;
+    } else { 
+        uv4.x += sin(shadow3NoiseScale +time*shadow3NoiseSpeed)*shadow3NoiseAmplitude*fontSizeMap;
     }
     sd = las(uv4 - shadow3Offset - mouseMovement);
     float shadow3 = shadow3Color.a*linearstep(0.0, +shadow3Blur+pxSize, sd);
