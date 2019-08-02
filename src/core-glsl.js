@@ -16,109 +16,112 @@ fetch('/fonts/Helvetica-msdf.json').then(data => data.json()).then(data => {
 });
 
 //xadvance 8, 43
+window.textScale = 60;
+window.offsetScale = 40;
+let ensureFloat = 0.00000000000001;
 
-export const genCharacters = (str)=> {
+export const genCharacters = (input, alignment)=> {
     let out = '';
-    if(str.length > 1) {
-        if(str.length % 2 == 0) {
-            out += 'uv.x -= .25;\n';
-        } else {
-            out += 'uv.x -= .25;\n';
+    console.log(input, 'input');
+    input = input.split('\\n');
+    
+    input.forEach((str, index) => {
+
+        let output = [];
+        if(str.length > 1) {
+            if(str.length % 2 == 0) {
+                //output.push('uv.x -= .25;');
+                
+            } else {
+                //out += 'uv.x -= .25;\n';
+            }
         }
-    } 
-    for(let i = 0; i < str.length; i++) {
+        // if(index !== 0) {
+            output.push(`uv.y += lineHeight;`);
+        // }
         
-        
-        let amt = (str.length / 2 - i);
-        if(amt === 0 || str.length == 1) {
-            amt = 0.00001;
-        }
-        let code = str.charCodeAt(i);
-        let xAdvance = 0.0;
-        let kerning = 0.0;
-        
-        if(Object.keys(fontData).length > 0) {
-            let kernings = fontData.kernings;
-            if(i !== str.length -1) {
-                let code2 = str.charCodeAt(i+1);
-                let kerningMatch = kernings.filter(obj => obj.first == code).filter(obj => obj.second == code2)[0];
-                if(kerningMatch) {
-                    kerning = kerningMatch.amount / 43. * 1.0000001;
+        let totalWidth = 0.0;
+        for(let i = 0; i < str.length; i++) {
+            let amt = (str.length / 2 - i);
+            if(amt === 0 || str.length == 1) {
+                amt = ensureFloat;
+            }
+            let code = str.charCodeAt(i);
+            let xAdvance = 0.0;
+            let xOffset = 0.0;
+            let kerning = 0.0;
+            
+            if(Object.keys(fontData).length > 0) {
+                let kernings = fontData.kernings;
+                if(i !== str.length -1) {
+                    let code2 = str.charCodeAt(i+1);
+                    let kerningMatch = kernings.filter(obj => obj.first == code).filter(obj => obj.second == code2)[0];
+                    if(kerningMatch) {
+                        kerning = kerningMatch.amount / window.textScale + ensureFloat;
+                    }
+                }
+                
+                let chr = fontData.chars.filter(obj => obj.id == code);
+                if (chr.length === 1) {
+                    
+                    chr = chr[0];
+                    console.log('chr', chr);
+                    xAdvance = chr.xadvance / window.textScale;
+                    xOffset = chr.xoffset / window.offsetScale;
+                    console.log(xAdvance);
                 }
             }
-            
-            let chr = fontData.chars.filter(obj => obj.id == code);
-            
-            if (chr.length === 1) {
-                
-                chr = chr[0];
-                console.log('chr', chr);
-                xAdvance = chr.xadvance / 43.0;
-                console.log(xAdvance);
+            //amt = 0.00000001;
+            //xAdvance = 0.0; kerning = 0.0;
+            // kerning = 0.0;
+            // out += `uv.x += letterSpacing * ${amt * 1.00000000001 };\n`
+            totalWidth += xAdvance ;
+            output.push(`uv.x -=  ${xOffset + ensureFloat}; //offset`);
+            // out += `uv.x -=  ${(xAdvance + kerning) * ensureFloat};\n`
+            if(code == 32) {
+                output.push(`uv.x -=  ${(xAdvance + kerning ) * +ensureFloat};`);
+            } else {
+                output.push(`d = max(d, character(uv, ${code}));\n`);
+                output.push(`uv.x -=  ${(xAdvance -xOffset) + ensureFloat}; //advance`);
             }
+            // output.push(`uv.x +=  ${(xOffset) + ensureFloat};`);
+            // out += `d = max(d, character(uv, ${code}));\n`;
+            
+            // out += `uv.x -= letterSpacing * ${amt *ensureFloat +xAdvance };\n`
         }
-        //amt = 0.00000001;
-         xAdvance = 0.0; kerning = 0.0;
-        out += `uv.x += letterSpacing * ${amt * 1.00000000001 };\n`
-        
-        out += `d = max(d, character(uv, ${code}));\n`;
-        out += `uv.x -= letterSpacing * ${amt *1.00000000001 +xAdvance + kerning};\n`
-    }
+        if (alignment === 'left'){
+            output.push(`uv.x += ${totalWidth + ensureFloat};`);
+        } else if (alignment === 'center') {
+            output.unshift(`uv.x += ${totalWidth / 2. + ensureFloat};`);
+            output.push(`uv.x += ${totalWidth/2. + ensureFloat};`);
+        } else {
+            //\___(o . o)___/
+            //output.push(`uv.x += ${totalWidth / 2. + ensureFloat};`);
+        }
+        //output.unshift(`uv.x +=  ${totalWidth/2 + ensureFloat};`);
+        //output.push(`uv.x +=  ${totalWidth / 2 + ensureFloat};`);
+        // output.unshift(`uv = vUv;\nuv = (uv - vec2(0.5))*fontSize + vec2(0.5);`);
+        out += output.join('\n');
+    });
     return out;
 }
 
 window.characters = `
-vec2 uv3 = uv;
 uv.x -= .25;
-uv.x += letterSpacing * 4.5000000000450004;
+uv.x +=  0.6583333333343334;
+uv.x +=  0.025000000010000002; //offset
 d = max(d, character(uv, 76));
-uv.x -= letterSpacing * 4.5000000000450004;
-uv.x += letterSpacing * 3.500000000035;
-d = max(d, character(uv, 105));
-uv.x -= letterSpacing * 3.500000000035;
-uv.x += letterSpacing * 2.500000000025;
-d = max(d, character(uv, 103));
-uv.x -= letterSpacing * 2.500000000025;
-uv.x += letterSpacing * 1.500000000015;
-d = max(d, character(uv, 104));
-uv.x -= letterSpacing * 1.500000000015;
-uv.x += letterSpacing * 0.500000000005;
-d = max(d, character(uv, 116));
-uv.x -= letterSpacing * 0.500000000005;
-uv.x += letterSpacing * -0.500000000005;
-d = max(d, character(uv, 32));
-uv.x -= letterSpacing * -0.500000000005;
-uv.x += letterSpacing * -1.500000000015;
+
+uv.x -=  0.38333333334333336; //advance
+uv.x -=  0.025000000010000002;
+uv.x +=  -0.02499999999; //offset
 d = max(d, character(uv, 65));
-uv.x -= letterSpacing * -1.500000000015;
-uv.x += letterSpacing * -2.500000000025;
-d = max(d, character(uv, 114));
-uv.x -= letterSpacing * -2.500000000025;
-uv.x += letterSpacing * -3.500000000035;
-d = max(d, character(uv, 116));
-uv.x -= letterSpacing * -3.500000000035;
 
+uv.x -=  0.4666666666766667; //advance
+uv.x -=  -0.02499999999;
+d = max(d, character(uv, 83));
 
-vec2 uv2 = uv;
-uv2.x -= .25;
-uv2.x += letterSpacing * 2.500000000025;
-float d2 = character(uv2, 83);
-uv2.x -= letterSpacing * 2.500000000025;
-uv2.x += letterSpacing * 1.500000000015;
-d2 = max(d2, character(uv2, 112));
-uv2.x -= letterSpacing * 1.500000000015;
-uv2.x += letterSpacing * 0.500000000005;
-d2 = max(d2, character(uv2, 97));
-uv2.x -= letterSpacing * 0.500000000005;
-uv2.x += letterSpacing * -0.500000000005;
-d2 = max(d2, character(uv2, 99));
-uv2.x -= letterSpacing * -0.500000000005;
-uv2.x += letterSpacing * -1.500000000015;
-d2 = max(d2, character(uv2, 101));
-
-//d = mix(d, noise(vec3(uv3 *1000. +time, 1.0))*0.3 , nsin(time));
-`;
-window.characters = genCharacters('LAS');
+uv.x -=  0.4666666666766667; //advance`;
 // export let characters = genCharacters('LAS');
 // console.log(characters);
 // const characters = `
@@ -138,6 +141,7 @@ uniform vec3 sculptureCenter;
 uniform vec3 mouse;
 uniform float stepSize;
 uniform sampler2D msdf;
+uniform vec2 resolution;
 vec3 msdfTexture;
 
 varying vec2 vUv;
@@ -363,17 +367,30 @@ const vec3 borderColor = vec3(1.0, 1.0, 1.0);
 uniform vec2 shadow1Offset;
 uniform float shadow1Blur;
 uniform vec4 shadow1Color;
+uniform float shadow1NoiseSpeed;
+uniform float shadow1NoiseScale;
+uniform float shadow1NoiseAmplitude;
+uniform bool shadow1NoiseEnabled;
 
 uniform vec2 shadow2Offset;
 uniform float shadow2Blur;
 uniform vec4 shadow2Color;
+uniform float shadow2NoiseSpeed;
+uniform float shadow2NoiseScale;
+uniform float shadow2NoiseAmplitude;
+uniform bool shadow2NoiseEnabled;
 
 uniform vec2 shadow3Offset;
 uniform float shadow3Blur;
 uniform vec4 shadow3Color;
+uniform float shadow3NoiseSpeed;
+uniform float shadow3NoiseScale;
+uniform float shadow3NoiseAmplitude;
+uniform bool shadow3NoiseEnabled;
 
 uniform float fontSize;
 uniform float letterSpacing;
+uniform float lineHeight;
 uniform float mouseMovementSpeed;
 
 uniform float invert;
@@ -433,9 +450,10 @@ float remap(float value, float inputMin, float inputMax, float outputMin, float 
 }
 
 float las(vec2 uv) {
-    
+    // uv.x -= 0.05;
+    uv.x += 0.1;
     //uv += noise(uv *1000.+ time*0.1)*0.01;
-    uv = (uv - vec2(0.5)) * fontSize + vec2(0.5);
+    //uv = (uv - vec2(0.5)) *fontSize + vec2(0.5);
     float d = 0.0;
     ${window.characters}
   	return d;
@@ -449,7 +467,24 @@ export const fragFooter = `
 // For advanced users //
 void main() {
     vec2 uv = vUv;
-    msdfTexture = texture2D(msdf, uv).rgb;
+    //vec2 uv = gl_FragCoord.xy / resolution.xy;
+    uv = (uv - vec2(0.5))*fontSize + vec2(0.5);
+    
+    
+    // uv.x -= 0.5;
+    // uv.y -= 0.5;
+    //uv *= fontSize;
+    
+    //uv.x *= resolution.x/resolution.y;
+    
+    
+    
+    // uv.x -= 0.25;
+
+    //uv -= vec2(0.25);
+    //uv = (uv - vec2(0.5)) + vec2(0.5);
+    
+    msdfTexture = texture2D(msdf, vUv).rgb;
     
     //int code = START_CODE + int(mouse.x * float(CHARS_COUNT));    
     
@@ -457,14 +492,25 @@ void main() {
     float inside = linearstep(0.0, -border+pxSize, sd);
     float outsideBorder = border > 0.0 ? linearstep(0.0, +border+pxSize, sd) : 1.0;
     
+    float fontSizeMap = (1.0 - 20.0/fontSize);
+    //fontSizeMap = 1.0;
     vec2 mouseMovement = mouse.xy * mouseMovementSpeed;
-    vec2 uv2 = uv + noise(uv +time*0.1)*0.03;
+    vec2 uv2 = uv;
+    if(shadow1NoiseEnabled) {
+        uv2 += noise(uv*shadow1NoiseScale +time*shadow1NoiseSpeed)*shadow1NoiseAmplitude*fontSizeMap;
+    }
     sd = las(uv2 - shadow1Offset - mouseMovement);
     float shadow1 = shadow1Color.a*linearstep(0.0, +shadow1Blur+pxSize, sd);
-    vec2 uv3 = uv + noise(uv +time*0.1 + 100.)*0.03;
-    sd = las(uv2 - shadow2Offset - mouseMovement);
+    vec2 uv3 = uv;
+    if(shadow2NoiseEnabled) {
+        uv3 += noise(uv*shadow2NoiseScale +time*shadow2NoiseSpeed + 100.)*shadow2NoiseAmplitude*fontSizeMap;
+    }
+    sd = las(uv3 - shadow2Offset - mouseMovement);
     float shadow2 = shadow2Color.a*linearstep(0.0, +shadow2Blur+pxSize, sd);
-    vec2 uv4 = uv + noise(uv +time*0.1 + 1000.)*0.03;
+    vec2 uv4 = uv;
+    if(shadow3NoiseEnabled) {
+        uv4 += noise(uv*shadow3NoiseScale +time*shadow3NoiseSpeed + 1000.)*shadow3NoiseAmplitude*fontSizeMap;
+    }
     sd = las(uv4 - shadow3Offset - mouseMovement);
     float shadow3 = shadow3Color.a*linearstep(0.0, +shadow3Blur+pxSize, sd);
 
@@ -473,14 +519,6 @@ void main() {
     o = mix(o, shadow1Color, (1.0 - inside) * shadow1);
     o = mix(o, shadow2Color, (1.0 - inside) * shadow2);
     o = mix(o, shadow3Color, (1.0 - inside) * shadow3);
-    
-    uv = (uv - vec2(0.5)) * fontSize + vec2(0.5);
-    // o = vec4(vec3(invert) - o.xyz , o.a);
-    if(invert >= 0.0 && invert < 2.0) {
-        o = vec4(vec3(invert) - o.xyz , o.a);
-    }else{
-        o = vec4(o.xyz - vec3(invert - 3.), o.a);
-    }
     
     gl_FragColor = o;
 	
