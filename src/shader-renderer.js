@@ -45,21 +45,33 @@ export class StartLitElement extends LitElement {
       color: [255, 0, 0, 0.75],
       xOffset: 0.012,
       yOffset: -0.012,
-      blurRadius: 0.25
+      blurRadius: 0.25,
+      speed: 0.1,
+      amplitude: 0.03,
+      scale: 1.0,
+      noiseEnabled: true
     }
 
     this.color2 = {
       color: [24, 255, 0, 0.75],
       xOffset: 0.0001,
       yOffset: 0.0001,
-      blurRadius: .3
+      blurRadius: .3,
+      speed: 0.1,
+      amplitude: 0.03,
+      scale: 1.0,
+      noiseEnabled: true
     }
 
     this.color3 = {
       color: [0, 24, 255, 0.75],
       xOffset: -0.01,
       yOffset: 0.01,
-      blurRadius: 0.25
+      blurRadius: 0.25,
+      speed: 0.1,
+      amplitude: 0.03,
+      scale: 1.0,
+      noiseEnabled: true
     }
 
     this.params = {
@@ -186,6 +198,15 @@ export class StartLitElement extends LitElement {
     folder.add(param, 'yOffset', -0.25, 0.25)
       .onChange(() => this.requestUpdate());
     folder.add(param, 'blurRadius', 0.0, 1.0)
+      .onChange(() => this.requestUpdate());
+    let noiseFolder = folder.addFolder('Noise');
+    noiseFolder.add(param, 'speed', 0.0, 1.0)
+      .onChange(() => this.requestUpdate());
+    noiseFolder.add(param, 'amplitude', 0.0, 0.12)
+      .onChange(() => this.requestUpdate());
+    noiseFolder.add(param, 'scale', 0.0, 10.0)
+      .onChange(() => this.requestUpdate());
+    noiseFolder.add(param, 'noiseEnabled')
       .onChange(() => this.requestUpdate());
   }
 
