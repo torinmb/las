@@ -14,7 +14,7 @@
     "dat.gui": "^0.7.6",
     "dom-to-image": "^2.6.0",
     "lit-element": "latest",
-    "postprocessing": "^6.5.1",
-    "three": "^0.106.1"
+    "postprocessing": "^6.6.0",
+    "three": "^0.107"
   }
 }

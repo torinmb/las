@@ -1,10 +1,14 @@
 import * as THREE from 'three';
 import { ShaderContainer } from './shader-container.js';
-import { BloomEffect, EffectComposer, EffectPass, RenderPass, BrightnessContrastEffect, BlurPass, BlendFunction, SavePass} from "postprocessing";
+import { BloomEffect, EffectComposer, EffectPass, RenderPass, BrightnessContrastEffect, BlendFunction, SavePass, BlurPass, KernelSize} from "postprocessing";
 import { InvertEffect} from './invert-effect.js';
+// import ThreeMSDF from 'three-msdf'
+
 
 export const renderScene = (container, guiData) => {
+    console.log('got to donwload screenshot')
     window.guiData = guiData;
+    window.resScale = 700;
     const scene = new THREE.Scene();
     
     const texture = new THREE.TextureLoader().load('fonts/msdf3.png');
@@ -50,8 +54,12 @@ export const renderScene = (container, guiData) => {
     window.scene = scene;
     let bloomEffect = new BloomEffect();
     window.bloomEffect = bloomEffect;
-    let blurPass = new BlurPass();
+    let blurPass = new BlurPass({ height: 960, kernelSize: KernelSize.HUGE});
+    // setFixedBlurSize(blurPass, 720, camera.aspect);
+    window.blurPass = blurPass;
     let savePass = new SavePass();
+
+
     let brightnessContrastEffect = new BrightnessContrastEffect({ contrast: guiData.params.contrast });
     
     let invertEffect = new InvertEffect({ invert: guiData.params.invert });
@@ -62,9 +70,10 @@ export const renderScene = (container, guiData) => {
 
     composer.addPass(new RenderPass(scene, camera));
     composer.addPass(blurPass);
-    // composer.addPass(savePass);
+    
     composer.addPass(effectPass);
     composer.addPass(new RenderPass(scene, camera));
+    composer.addPass(savePass);
     
 
     let t = 0.0;
@@ -94,10 +103,11 @@ export const renderScene = (container, guiData) => {
 
         // controls.update();
         
-        bloomEffect.distinction = guiData.bloom.distinction;
+        bloomEffect.threshold = guiData.bloom.distinction;
         bloomEffect.blendMode.opacity.value = guiData.bloom.opacity;
         bloomEffect.setResolutionScale(guiData.bloom.resolutionScale);
-        blurPass.setResolutionScale(1.5 - (guiData.params.blur));
+        // blurPass.setResolutionScale(1.5 - (guiData.params.blur));
+        blurPass.scale = (guiData.params.blur);
         brightnessContrastEffect.fragmentShader = `
         uniform float brightness;
         uniform float contrast;
@@ -112,14 +122,31 @@ export const renderScene = (container, guiData) => {
         composer.render(time);
     }
 
+    function setFixedBlurSize(blurPass, height, aspect) {
+
+        const width = height * aspect;
+
+        // Hack: these are private fields.
+        blurPass.renderTargetX.setSize(width, height);
+        blurPass.renderTargetY.setSize(width, height);
+        blurPass.convolutionMaterial.setTexelSize(1.0 / width, 1.0 / height);
+        blurPass.ditheredConvolutionMaterial.setTexelSize(1.0 / width, 1.0 / height);
+        console.log(blurPass, 'setting fixed height');
+
+    }
+
+
     function onWindowResize() {
         let width = container.clientWidth;
         let height = container.clientHeight;
+        composer.setSize(width, height);
         camera.aspect = width / height;
         camera.updateProjectionMatrix();
-        renderer.setSize(width, height);
-        composer.setSize(width, height);
-        guiData.params.resolution.set(width, height);
+        // setFixedBlurSize(blurPass, 720, camera.aspect);
+        // renderer.setSize(width, height);
+        
+        composer.render(t);
+        // guiData.params.resolution.set(width, height);
     }
 
     function onDocumentMouseMove(event) {
@@ -132,7 +159,7 @@ export const renderScene = (container, guiData) => {
 
         var pointer = event.changedTouches ? event.changedTouches[0] : event;
 
-    var rect = container.getBoundingClientRect();
+        var rect = container.getBoundingClientRect();
         mouse.x = (pointer.clientX - rect.left) / rect.width * 2 - 1;
         mouse.y = - (pointer.clientY - rect.top) / rect.height * 2 + 1;
 
@@ -146,12 +173,13 @@ export const renderScene = (container, guiData) => {
     function downloadScreenShot(width, height) {
         const renderer = composer.getRenderer();
 		const originalSize = renderer.getSize(new THREE.Vector2());
-        camera.aspect = width / height;
-        camera.updateProjectionMatrix();
+        // camera.aspect = width / height;
+        // camera.updateProjectionMatrix();
+        // setFixedBlurSize(blurPass, 720, camera.aspect);
 		
         composer.setSize(width, height);
-        guiData.params.resolution.set(width, height);
-        shaderContainer.update({ t, mouse, ...guiData });
+        // guiData.params.resolution.set(width, height);
+        // shaderContainer.update({ t, mouse, ...guiData });
 		composer.render(t);
 
 		// Data URL doesn't work because the image data is too big.
@@ -169,6 +197,7 @@ export const renderScene = (container, guiData) => {
 			composer.setSize(originalSize.width, originalSize.height);
             camera.aspect = originalSize.width / originalSize.height;
             camera.updateProjectionMatrix();
+            // setFixedBlurSize(blurPass, 720, camera.aspect);
             guiData.params.resolution.set(originalSize.width, originalSize.height);
             shaderContainer.update({ t, mouse, ...guiData });
             composer.render(t);
