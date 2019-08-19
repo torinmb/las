@@ -79,11 +79,13 @@ export class StartLitElement extends LitElement {
       contrast: 0.8,
       brightness: 3.0,
       invert: 3.0,
+      invertScene: true,
       fontSize: 17.0,
       letterSpacing: 0.45,
       lineHeight: 0.5,
       opacity: 1,
       textAlign: 'center',
+      displacement: 'noise',
       text: 'LAS',
       mouseMovementSpeed: 0.02,
       backgroundColor: 0.0,
@@ -144,17 +146,19 @@ export class StartLitElement extends LitElement {
       .onChange(() => this.requestUpdate()).listen();
     this.gui.add(this.params, 'contrast', 0.0, 1.0)
       .onChange(() => this.requestUpdate());
-    this.gui.add(this.params, 'brightness', 0.0, 3.5)
-      .onChange(() => this.requestUpdate());
-    this.gui.add(this.params, 'invert', 0.0, 3.5)
-      .onChange(() => {
-        this.params.backgroundColor = 255 * ((3.0 - this.params.invert));
-        this.requestUpdate();
-      });
-
-    // this.gui.add(this.params, 'opacity', 0.0, 1.0)
+    // this.gui.add(this.params, 'brightness', 0.0, 3.5)
     //   .onChange(() => this.requestUpdate());
-
+    // this.gui.add(this.params, 'invert', 0.0, 3.5)
+    //   .onChange(() => {
+    //     this.params.backgroundColor = 255 * ((3.0 - this.params.invert));
+    //     this.requestUpdate();
+    //   }).listen();
+    this.gui.add(this.params, 'invertScene').onChange(() => {
+      this.params.invert = this.params.invertScene? 3.0: 1.0;
+      
+      this.params.backgroundColor = 255 * ((3.0 - this.params.invert));
+      this.requestUpdate();
+    })
     this.gui.add(this.params, 'fontSize', 0.0, 20.0)
       .onChange((val) => {
         this.params.blur = Math.max(0.1, val*0.1 - 0.7);
@@ -164,7 +168,12 @@ export class StartLitElement extends LitElement {
       .onChange(() => this.requestUpdate());
     this.gui.add(this.params, 'lineHeight', -2.0, 2.0)
       .onChange(() => this.requestUpdate());
-    
+    this.gui.add(this.params, 'displacement', ['noise', 'linear']).onChange(() => {
+      let linear = {scale: 0.001, amplitude: 0.021};
+      let noise = {scale: 1.0, amplitude: 0.03, time : 0.1}
+      let displacement = this.params.displacement === 'linear'? linear: noise;
+      [this.color1, this.color2, this.color3].forEach(col => Object.assign(col, displacement));
+    });
     this.gui.add(this.params, 'textAlign', ['left', 'center', 'right'])
       .onChange(() => {
         this.requestUpdate();
