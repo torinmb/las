@@ -157,7 +157,7 @@ export class StartLitElement extends LitElement {
 
     this.gui.add(this.params, 'fontSize', 0.0, 20.0)
       .onChange((val) => {
-        this.params.blur = val/15;
+        this.params.blur = Math.max(0.1, val*0.1 - 0.8);
         this.requestUpdate()
       });
     this.gui.add(this.params, 'letterSpacing', -2.0, 2.0)
