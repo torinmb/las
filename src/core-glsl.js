@@ -28,6 +28,7 @@ export const genCharacters = (input, alignment)=> {
     input.forEach((str, index) => {
 
         let output = [];
+        
         if(str.length > 1) {
             if(str.length % 2 == 0) {
                 //output.push('uv.x -= .25;');
@@ -36,9 +37,9 @@ export const genCharacters = (input, alignment)=> {
                 //out += 'uv.x -= .25;\n';
             }
         }
-        // if(index !== 0) {
+        if(index !== 0) {
             output.push(`uv.y += lineHeight;`);
-        // }
+        }
         
         let totalWidth = 0.0;
         for(let i = 0; i < str.length; i++) {
@@ -75,7 +76,7 @@ export const genCharacters = (input, alignment)=> {
             //xAdvance = 0.0; kerning = 0.0;
             // kerning = 0.0;
             // out += `uv.x += letterSpacing * ${amt * 1.00000000001 };\n`
-            totalWidth += xAdvance ;
+            totalWidth += xAdvance  ;
             output.push(`uv.x -=  ${xOffset + ensureFloat}; //offset`);
             // out += `uv.x -=  ${(xAdvance + kerning) * ensureFloat};\n`
             if(code == 32) {
@@ -107,21 +108,20 @@ export const genCharacters = (input, alignment)=> {
 }
 
 window.characters = `
-uv.x -= .25;
-uv.x +=  0.6583333333343334;
-uv.x +=  0.025000000010000002; //offset
+uv.x += 0.6416666666666767;
+uv.x -=  0.02500000000001; //offset
 d = max(d, character(uv, 76));
 
-uv.x -=  0.38333333334333336; //advance
-uv.x -=  0.025000000010000002;
-uv.x +=  -0.02499999999; //offset
+uv.x -=  0.35833333333334333; //advance
+uv.x -=  -0.049999999999990004; //offset
 d = max(d, character(uv, 65));
 
-uv.x -=  0.4666666666766667; //advance
-uv.x -=  -0.02499999999;
+uv.x -=  0.50000000000001; //advance
+uv.x -=  1e-14; //offset
 d = max(d, character(uv, 83));
 
-uv.x -=  0.4666666666766667; //advance`;
+uv.x -=  0.45000000000001; //advance
+uv.x += 0.6416666666666767;`;
 // export let characters = genCharacters('LAS');
 // console.log(characters);
 // const characters = `
@@ -450,10 +450,6 @@ float remap(float value, float inputMin, float inputMax, float outputMin, float 
 }
 
 float las(vec2 uv) {
-    // uv.x -= 0.05;
-    uv.x += 0.1;
-    //uv += noise(uv *1000.+ time*0.1)*0.01;
-    //uv = (uv - vec2(0.5)) *fontSize + vec2(0.5);
     float d = 0.0;
     ${window.characters}
   	return d;
@@ -467,7 +463,7 @@ export const fragFooter = `
 // For advanced users //
 void main() {
     vec2 uv = vUv;
-    //vec2 uv = gl_FragCoord.xy / resolution.xy;
+    // uv = gl_FragCoord.xy / resolution.xy;
     uv = (uv - vec2(0.5))*fontSize + vec2(0.5);
     
     
@@ -497,25 +493,28 @@ void main() {
     vec2 mouseMovement = mouse.xy * mouseMovementSpeed;
     vec2 uv2 = uv;
     if(shadow1NoiseEnabled) {
-        uv2 += noise(uv*shadow1NoiseScale +time*shadow1NoiseSpeed)*shadow1NoiseAmplitude*fontSizeMap;
+        uv2 -= noise(uv*shadow1NoiseScale +time*shadow1NoiseSpeed)*shadow1NoiseAmplitude*fontSizeMap;
     } else { 
         uv2.x += sin(shadow1NoiseScale +time*shadow1NoiseSpeed)*shadow1NoiseAmplitude*fontSizeMap;
+        uv2.y += cos(shadow1NoiseScale +time*shadow1NoiseSpeed)*shadow1NoiseAmplitude*fontSizeMap;
     }
     sd = las(uv2 - shadow1Offset - mouseMovement);
     float shadow1 = shadow1Color.a*linearstep(0.0, +shadow1Blur+pxSize, sd);
     vec2 uv3 = uv;
     if(shadow2NoiseEnabled) {
-        uv3 += noise(uv*shadow2NoiseScale +time*shadow2NoiseSpeed + 100.)*shadow2NoiseAmplitude*fontSizeMap;
+        uv3 -= noise(uv*shadow2NoiseScale +time*shadow2NoiseSpeed + 100.)*shadow2NoiseAmplitude*fontSizeMap;
     } else { 
         uv3.x += sin(shadow2NoiseScale +time*shadow2NoiseSpeed)*shadow2NoiseAmplitude*fontSizeMap;
+        uv3.y += cos(shadow2NoiseScale +time*shadow2NoiseSpeed)*shadow2NoiseAmplitude*fontSizeMap;
     }
     sd = las(uv3 - shadow2Offset - mouseMovement);
     float shadow2 = shadow2Color.a*linearstep(0.0, +shadow2Blur+pxSize, sd);
     vec2 uv4 = uv;
     if(shadow3NoiseEnabled) {
-        uv4 += noise(uv*shadow3NoiseScale +time*shadow3NoiseSpeed + 1000.)*shadow3NoiseAmplitude*fontSizeMap;
+        uv4 -= noise(uv*shadow3NoiseScale +time*shadow3NoiseSpeed + 1000.)*shadow3NoiseAmplitude*fontSizeMap;
     } else { 
         uv4.x += sin(shadow3NoiseScale +time*shadow3NoiseSpeed)*shadow3NoiseAmplitude*fontSizeMap;
+        uv4.y += cos(shadow3NoiseScale +time*shadow3NoiseSpeed)*shadow3NoiseAmplitude*fontSizeMap;
     }
     sd = las(uv4 - shadow3Offset - mouseMovement);
     float shadow3 = shadow3Color.a*linearstep(0.0, +shadow3Blur+pxSize, sd);
