@@ -17,7 +17,7 @@ fetch('/fonts/Helvetica-msdf.json').then(data => data.json()).then(data => {
 
 //xadvance 8, 43
 window.textScale = 60;
-window.offsetScale = 40;
+window.offsetScale = 12;
 let ensureFloat = 0.00000000000001;
 
 export const genCharacters = (input, alignment)=> {
@@ -60,42 +60,56 @@ export const genCharacters = (input, alignment)=> {
                     if(kerningMatch) {
                         kerning = kerningMatch.amount / window.textScale + ensureFloat;
                     }
+                    console.log(kerningMatch, kerning)
                 }
                 
                 let chr = fontData.chars.filter(obj => obj.id == code);
                 if (chr.length === 1) {
                     
                     chr = chr[0];
-                    console.log('chr', chr);
+                    
                     xAdvance = chr.xadvance / window.textScale;
                     xOffset = chr.xoffset / window.offsetScale;
-                    console.log(xAdvance);
+                    console.log(`${chr} xAdvance: ${xAdvance} u:${chr.xadvance}`);
                 }
             }
             //amt = 0.00000001;
             //xAdvance = 0.0; kerning = 0.0;
             // kerning = 0.0;
             // out += `uv.x += letterSpacing * ${amt * 1.00000000001 };\n`
-            totalWidth += xAdvance  ;
-            output.push(`uv.x -=  ${xOffset + ensureFloat}; //offset`);
+            totalWidth += xAdvance + kerning ;
+            // output.push(`uv.x -=  ${xOffset + ensureFloat}; //offset`);
             // out += `uv.x -=  ${(xAdvance + kerning) * ensureFloat};\n`
             if(code == 32) {
-                output.push(`uv.x -=  ${(xAdvance + kerning ) * +ensureFloat};`);
+                output.push(`uv.x -=  ${(kerning) +ensureFloat}+letterSpacing;`);
             } else {
                 output.push(`d = max(d, character(uv, ${code}));\n`);
-                output.push(`uv.x -=  ${(xAdvance -xOffset) + ensureFloat}; //advance`);
+                output.push(`uv.x -=  ${(kerning + xAdvance) + ensureFloat}+letterSpacing; //advance`);
+
             }
-            // output.push(`uv.x +=  ${(xOffset) + ensureFloat};`);
+            // output.push(`uv.x +=  ${xOffset + ensureFloat}; //undo offset`);
             // out += `d = max(d, character(uv, ${code}));\n`;
             
             // out += `uv.x -= letterSpacing * ${amt *ensureFloat +xAdvance };\n`
         }
-        if (alignment === 'left'){
+        if (alignment === 'left') {
+            if(index === 0) {
+                output.unshift(`uv.x += ${totalWidth + ensureFloat};`);
+            }
             output.push(`uv.x += ${totalWidth + ensureFloat};`);
         } else if (alignment === 'center') {
             output.unshift(`uv.x += ${totalWidth / 2. + ensureFloat};`);
-            output.push(`uv.x += ${totalWidth/2. + ensureFloat};`);
-        } else {
+            output.push(`uv.x += ${totalWidth / 2. + ensureFloat};`);
+        } else if (alignment === 'right') {
+            // output.unshift(`uv.x += ${totalWidth / 2. + ensureFloat};`);
+            // output.push(`uv.x += ${totalWidth / 2. + ensureFloat};`);
+            // output.unshift(`uv.x += ${totalWidth / 2. + ensureFloat};`);
+            if (index === 0) {
+                // output.unshift(`uv.x -= ${totalWidth + ensureFloat};`);
+            } else {
+                // output.push(`uv.x -= ${ totalWidth + ensureFloat};`);
+            }
+            
             //\___(o . o)___/
             //output.push(`uv.x += ${totalWidth / 2. + ensureFloat};`);
         }
@@ -109,18 +123,15 @@ export const genCharacters = (input, alignment)=> {
 
 window.characters = `
 uv.x += 0.6416666666666767;
-uv.x -=  0.02500000000001; //offset
 d = max(d, character(uv, 76));
 
-uv.x -=  0.35833333333334333; //advance
-uv.x -=  -0.049999999999990004; //offset
+uv.x -=  0.38333333333334335+letterSpacing; //advance
 d = max(d, character(uv, 65));
 
-uv.x -=  0.50000000000001; //advance
-uv.x -=  1e-14; //offset
+uv.x -=  0.45000000000001+letterSpacing; //advance
 d = max(d, character(uv, 83));
 
-uv.x -=  0.45000000000001; //advance
+uv.x -=  0.45000000000001+letterSpacing; //advance
 uv.x += 0.6416666666666767;`;
 // export let characters = genCharacters('LAS');
 // console.log(characters);
@@ -189,38 +200,6 @@ float ncos(float x) {
 
 float round(float x) {
     return floor(x+0.5);
-}
-
-float softSquare(float x, int pw) {
-    return 1.0/(pow(tan(x),float(pw+1)*2.0)+1.0);
-}
-
-
-
-vec3 toSpherical(vec3 p) {
-    float phi = atan(p.x,p.z);
-    float r = length(p);
-    float theta = acos(-p.y/r);
-    return vec3(r,theta,phi);
-}
-
-vec3 fromSpherical(vec3 p) {
-    return vec3(p.x*sin(p.y)*cos(p.z), p.x*sin(p.y)*sin(p.z), p.x*cos(p.y));
-}
-
-float dot2( in vec3 v ) { return dot(v,v); }
-
-vec3 repeat3D(vec3 p, vec3 c )
-{
-    return mod(p,c)-0.5*c;
-}
-
-float repeat1D(inout float p, float size)
-{
-	float halfSize = size * 0.5;
-	float c = floor((p + halfSize) / size);
-  	p = mod(p + halfSize, size)-halfSize;
-  	return c;
 }
 
 mat2 rot2(float a){
@@ -390,6 +369,9 @@ uniform bool shadow3NoiseEnabled;
 
 uniform float fontSize;
 uniform float letterSpacing;
+uniform float displacementScale;
+uniform float xOffset;
+uniform float yOffset;
 uniform float lineHeight;
 uniform float mouseMovementSpeed;
 
@@ -460,25 +442,11 @@ float las(vec2 uv) {
 
 
 export const fragFooter = `
-// For advanced users //
 void main() {
     vec2 uv = vUv;
-    // uv = gl_FragCoord.xy / resolution.xy;
-    uv = (uv - vec2(0.5))*fontSize + vec2(0.5);
-    
-    
-    // uv.x -= 0.5;
-    // uv.y -= 0.5;
-    //uv *= fontSize;
-    
-    //uv.x *= resolution.x/resolution.y;
-    
-    
-    
-    // uv.x -= 0.25;
-
-    //uv -= vec2(0.25);
-    //uv = (uv - vec2(0.5)) + vec2(0.5);
+    vec2 nuv = vUv;
+    uv = (uv - vec2(0.5))*fontSize + vec2(0.25, 0.5);
+    uv -= vec2(xOffset, -yOffset);
     
     msdfTexture = texture2D(msdf, vUv).rgb;
     
@@ -488,33 +456,31 @@ void main() {
     float inside = linearstep(0.0, -border+pxSize, sd);
     float outsideBorder = border > 0.0 ? linearstep(0.0, +border+pxSize, sd) : 1.0;
     
-    float fontSizeMap = (1.0 - 20.0/fontSize);
-    //fontSizeMap = 1.0;
     vec2 mouseMovement = mouse.xy * mouseMovementSpeed;
     vec2 uv2 = uv;
     if(shadow1NoiseEnabled) {
-        uv2 -= noise(uv*shadow1NoiseScale +time*shadow1NoiseSpeed)*shadow1NoiseAmplitude*fontSizeMap;
+        uv2 -= noise(nuv*shadow1NoiseScale +time*shadow1NoiseSpeed)*shadow1NoiseAmplitude*displacementScale;
     } else { 
-        uv2.x += sin(shadow1NoiseScale +time*shadow1NoiseSpeed)*shadow1NoiseAmplitude*fontSizeMap;
-        uv2.y += cos(shadow1NoiseScale +time*shadow1NoiseSpeed)*shadow1NoiseAmplitude*fontSizeMap;
+        uv2.x += sin(shadow1NoiseScale +time*shadow1NoiseSpeed)*shadow1NoiseAmplitude*displacementScale;
+        uv2.y += cos(shadow1NoiseScale +time*shadow1NoiseSpeed)*shadow1NoiseAmplitude*displacementScale;
     }
     sd = las(uv2 - shadow1Offset - mouseMovement);
     float shadow1 = shadow1Color.a*linearstep(0.0, +shadow1Blur+pxSize, sd);
     vec2 uv3 = uv;
     if(shadow2NoiseEnabled) {
-        uv3 -= noise(uv*shadow2NoiseScale +time*shadow2NoiseSpeed + 100.)*shadow2NoiseAmplitude*fontSizeMap;
+        uv3 -= noise(nuv*shadow2NoiseScale +time*shadow2NoiseSpeed + 100.)*shadow2NoiseAmplitude*displacementScale;
     } else { 
-        uv3.x += sin(shadow2NoiseScale +time*shadow2NoiseSpeed)*shadow2NoiseAmplitude*fontSizeMap;
-        uv3.y += cos(shadow2NoiseScale +time*shadow2NoiseSpeed)*shadow2NoiseAmplitude*fontSizeMap;
+        uv3.x += sin(shadow2NoiseScale +time*shadow2NoiseSpeed)*shadow2NoiseAmplitude*displacementScale;
+        uv3.y += cos(shadow2NoiseScale +time*shadow2NoiseSpeed)*shadow2NoiseAmplitude*displacementScale;
     }
     sd = las(uv3 - shadow2Offset - mouseMovement);
     float shadow2 = shadow2Color.a*linearstep(0.0, +shadow2Blur+pxSize, sd);
     vec2 uv4 = uv;
     if(shadow3NoiseEnabled) {
-        uv4 -= noise(uv*shadow3NoiseScale +time*shadow3NoiseSpeed + 1000.)*shadow3NoiseAmplitude*fontSizeMap;
+        uv4 -= noise(nuv*shadow3NoiseScale +time*shadow3NoiseSpeed + 1000.)*shadow3NoiseAmplitude*displacementScale;
     } else { 
-        uv4.x += sin(shadow3NoiseScale +time*shadow3NoiseSpeed)*shadow3NoiseAmplitude*fontSizeMap;
-        uv4.y += cos(shadow3NoiseScale +time*shadow3NoiseSpeed)*shadow3NoiseAmplitude*fontSizeMap;
+        uv4.x += sin(shadow3NoiseScale +time*shadow3NoiseSpeed)*shadow3NoiseAmplitude*displacementScale;
+        uv4.y += cos(shadow3NoiseScale +time*shadow3NoiseSpeed)*shadow3NoiseAmplitude*displacementScale;
     }
     sd = las(uv4 - shadow3Offset - mouseMovement);
     float shadow3 = shadow3Color.a*linearstep(0.0, +shadow3Blur+pxSize, sd);
