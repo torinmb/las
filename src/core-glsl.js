@@ -16,8 +16,8 @@ fetch('/fonts/Helvetica-msdf.json').then(data => data.json()).then(data => {
 });
 
 //xadvance 8, 43
-window.textScale = 60;
-window.offsetScale = 12;
+window.xAdvanceScale = 60;
+window.xOffsetScale = 100;
 let ensureFloat = 0.00000000000001;
 
 export const genCharacters = (input, alignment)=> {
@@ -58,7 +58,7 @@ export const genCharacters = (input, alignment)=> {
                     let code2 = str.charCodeAt(i+1);
                     let kerningMatch = kernings.filter(obj => obj.first == code).filter(obj => obj.second == code2)[0];
                     if(kerningMatch) {
-                        kerning = kerningMatch.amount / window.textScale + ensureFloat;
+                        kerning = kerningMatch.amount / window.xAdvanceScale + ensureFloat;
                     }
                     console.log(kerningMatch, kerning)
                 }
@@ -68,8 +68,8 @@ export const genCharacters = (input, alignment)=> {
                     
                     chr = chr[0];
                     
-                    xAdvance = chr.xadvance / window.textScale;
-                    xOffset = chr.xoffset / window.offsetScale;
+                    xAdvance = chr.xadvance / window.xAdvanceScale;
+                    xOffset = chr.xoffset / window.xOffsetScale;
                     console.log(`${chr} xAdvance: ${xAdvance} u:${chr.xadvance}`);
                 }
             }
@@ -78,7 +78,7 @@ export const genCharacters = (input, alignment)=> {
             // kerning = 0.0;
             // out += `uv.x += letterSpacing * ${amt * 1.00000000001 };\n`
             totalWidth += xAdvance + kerning ;
-            // output.push(`uv.x -=  ${xOffset + ensureFloat}; //offset`);
+            output.push(`uv.x -=  ${xOffset + ensureFloat}; //offset`);
             // out += `uv.x -=  ${(xAdvance + kerning) * ensureFloat};\n`
             if(code == 32) {
                 output.push(`uv.x -=  ${(kerning) +ensureFloat}+letterSpacing;`);
@@ -87,7 +87,7 @@ export const genCharacters = (input, alignment)=> {
                 output.push(`uv.x -=  ${(kerning + xAdvance) + ensureFloat}+letterSpacing; //advance`);
 
             }
-            // output.push(`uv.x +=  ${xOffset + ensureFloat}; //undo offset`);
+            output.push(`uv.x +=  ${xOffset + ensureFloat}; //undo offset`);
             // out += `d = max(d, character(uv, ${code}));\n`;
             
             // out += `uv.x -= letterSpacing * ${amt *ensureFloat +xAdvance };\n`

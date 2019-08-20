@@ -89,6 +89,7 @@ export class StartLitElement extends LitElement {
       displacementScale: 4.0,
       xOffset: 0.0001,
       yOffset: 0.0001,
+      
       text: 'LAS',
       mouseMovementSpeed: 0.02,
       backgroundColor: 0.0,
@@ -115,6 +116,10 @@ export class StartLitElement extends LitElement {
       opacity: 1.0
     }
 
+    this.kerning = {
+      xOffsetScale: 100.0,
+      xAdvanceScale: 60.0
+    }
 
     this.gui = new dat.GUI();
     this.gui.remember(this.export);
@@ -123,6 +128,7 @@ export class StartLitElement extends LitElement {
     this.gui.remember(this.color2);
     this.gui.remember(this.color3);
     this.gui.remember(this.bloom);
+    this.gui.remember(this.kerning);
     // let el = (this.gui.domElement.style.display = 'none');
     document.querySelector('.dg').style.zIndex = 999;
     window.addEventListener('mousemove', this.onDocumentMouseMove.bind(this), false);
@@ -144,7 +150,19 @@ export class StartLitElement extends LitElement {
     bloom.add(this.bloom, 'opacity', 0.0, 1.0)
       .onChange(() => this.requestUpdate());
 
-    
+    let kerning = this.gui.addFolder('Kerning');
+    let kerningOnChange = (offset) => {
+      let val = this.kerning[offset] === 0.0 ? 0.0001 : this.kerning[offset];
+      window[offset] = val;
+      let chrs = genCharacters(this.params.text, this.params.textAlign);
+      window.characters = chrs;
+      this.requestUpdate();
+      window.refreshMaterial();
+    }
+    kerning.add(this.kerning, 'xOffsetScale', -300.0, 300.0)
+      .onChange(() => kerningOnChange('xOffsetScale'));
+    kerning.add(this.kerning, 'xAdvanceScale', 1.0, 100.0)
+      .onChange(() => kerningOnChange('xAdvanceScale'));
     this.gui.add(this.params, 'blur', 0.4, 3.5)
       .onChange(() => this.requestUpdate()).listen();
     this.gui.add(this.params, 'contrast', 0.0, 1.0)
@@ -166,7 +184,7 @@ export class StartLitElement extends LitElement {
         this.params.blur = Math.max(0.1, val*0.1 - 0.7);
         this.requestUpdate()
       });
-    this.gui.add(this.params, 'letterSpacing', -1.5, 1.5)
+    kerning.add(this.params, 'letterSpacing', -1.5, 1.5)
       .onChange(() => this.requestUpdate());
     this.gui.add(this.params, 'lineHeight', -2.0, 2.0)
       .onChange(() => this.requestUpdate());
