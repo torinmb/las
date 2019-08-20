@@ -76,18 +76,18 @@ export class StartLitElement extends LitElement {
 
     this.params = {
       blur: 1.,
-      contrast: 0.88,
+      contrast: 0.9,
       brightness: 3.0,
       invert: 3.0,
       invertScene: true,
       fontSize: 17.0,
-      letterSpacing: -0.01,
+      letterSpacing: -0.0001,
       lineHeight: 0.55,
       opacity: 1,
       textAlign: 'center',
       displacement: 'noise',
       displacementScale: 4.0,
-      xOffset: 0.0001,
+      xOffset: 0.2,
       yOffset: 0.0001,
       
       text: 'LAS',
@@ -117,8 +117,8 @@ export class StartLitElement extends LitElement {
     }
 
     this.kerning = {
-      xOffsetScale: 100.0,
-      xAdvanceScale: 60.0
+      xOffsetScale: 200.0,
+      xAdvanceScale: 64.0
     }
 
     this.gui = new dat.GUI();
@@ -159,7 +159,7 @@ export class StartLitElement extends LitElement {
       this.requestUpdate();
       window.refreshMaterial();
     }
-    kerning.add(this.kerning, 'xOffsetScale', -300.0, 300.0)
+    kerning.add(this.kerning, 'xOffsetScale', -400.0, 400.0)
       .onChange(() => kerningOnChange('xOffsetScale'));
     kerning.add(this.kerning, 'xAdvanceScale', 1.0, 100.0)
       .onChange(() => kerningOnChange('xAdvanceScale'));

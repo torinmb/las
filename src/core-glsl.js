@@ -16,7 +16,7 @@ fetch('/fonts/Helvetica-msdf.json').then(data => data.json()).then(data => {
 });
 
 //xadvance 8, 43
-window.xAdvanceScale = 60;
+window.xAdvanceScale = 64;
 window.xOffsetScale = 100;
 let ensureFloat = 0.00000000000001;
 
@@ -122,17 +122,23 @@ export const genCharacters = (input, alignment)=> {
 }
 
 window.characters = `
-uv.x += 0.6416666666666767;
+uv.x += 0.60156250000001;
+uv.x -=  0.010000000000010001; //offset
 d = max(d, character(uv, 76));
 
-uv.x -=  0.38333333333334335+letterSpacing; //advance
+uv.x -=  0.35937500000001+letterSpacing; //advance
+uv.x +=  0.010000000000010001; //undo offset
+uv.x -=  -0.01999999999999; //offset
 d = max(d, character(uv, 65));
 
-uv.x -=  0.45000000000001+letterSpacing; //advance
+uv.x -=  0.42187500000001+letterSpacing; //advance
+uv.x +=  -0.01999999999999; //undo offset
+uv.x -=  1e-14; //offset
 d = max(d, character(uv, 83));
 
-uv.x -=  0.45000000000001+letterSpacing; //advance
-uv.x += 0.6416666666666767;`;
+uv.x -=  0.42187500000001+letterSpacing; //advance
+uv.x +=  1e-14; //undo offset
+uv.x += 0.60156250000001;`;
 // export let characters = genCharacters('LAS');
 // console.log(characters);
 // const characters = `
