@@ -78,6 +78,9 @@ export class ShaderContainer {
 
             fontSize: { value: 1.0 },
             letterSpacing: { value: 1.0 },
+            displacementScale: { value: 1.0 },
+            xOffset: { value: 0.0 },
+            yOffset: { value: 0.0 },
             lineHeight: { value: 1.0 },
             mouseMovementSpeed: { value: 1.0 },
             invert : { value: 1.0 },
@@ -141,6 +144,10 @@ export class ShaderContainer {
 
         this.mesh.material.uniforms['fontSize'].value = 20. - params.fontSize;
         this.mesh.material.uniforms['letterSpacing'].value = params.letterSpacing;
+        this.mesh.material.uniforms['displacementScale'].value = params.displacementScale;
+        this.mesh.material.uniforms['xOffset'].value = params.xOffset;
+        this.mesh.material.uniforms['yOffset'].value = params.yOffset;
+        
         this.mesh.material.uniforms['lineHeight'].value = params.lineHeight;
         this.mesh.material.uniforms['mouseMovementSpeed'].value = params.mouseMovementSpeed;
         

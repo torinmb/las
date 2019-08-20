@@ -76,16 +76,19 @@ export class StartLitElement extends LitElement {
 
     this.params = {
       blur: 1.,
-      contrast: 0.8,
+      contrast: 0.88,
       brightness: 3.0,
       invert: 3.0,
       invertScene: true,
       fontSize: 17.0,
-      letterSpacing: 0.45,
-      lineHeight: 0.5,
+      letterSpacing: -0.01,
+      lineHeight: 0.55,
       opacity: 1,
       textAlign: 'center',
       displacement: 'noise',
+      displacementScale: 4.0,
+      xOffset: 0.0001,
+      yOffset: 0.0001,
       text: 'LAS',
       mouseMovementSpeed: 0.02,
       backgroundColor: 0.0,
@@ -142,7 +145,7 @@ export class StartLitElement extends LitElement {
       .onChange(() => this.requestUpdate());
 
     
-    this.gui.add(this.params, 'blur', 0.0, 3.0)
+    this.gui.add(this.params, 'blur', 0.4, 3.5)
       .onChange(() => this.requestUpdate()).listen();
     this.gui.add(this.params, 'contrast', 0.0, 1.0)
       .onChange(() => this.requestUpdate());
@@ -155,16 +158,15 @@ export class StartLitElement extends LitElement {
     //   }).listen();
     this.gui.add(this.params, 'invertScene').onChange(() => {
       this.params.invert = this.params.invertScene? 3.0: 1.0;
-      
       this.params.backgroundColor = 255 * ((3.0 - this.params.invert));
       this.requestUpdate();
     })
-    this.gui.add(this.params, 'fontSize', 0.0, 20.0)
+    this.gui.add(this.params, 'fontSize', 10.0, 18.5)
       .onChange((val) => {
         this.params.blur = Math.max(0.1, val*0.1 - 0.7);
         this.requestUpdate()
       });
-    this.gui.add(this.params, 'letterSpacing', -2.0, 2.0)
+    this.gui.add(this.params, 'letterSpacing', -1.5, 1.5)
       .onChange(() => this.requestUpdate());
     this.gui.add(this.params, 'lineHeight', -2.0, 2.0)
       .onChange(() => this.requestUpdate());
@@ -174,7 +176,13 @@ export class StartLitElement extends LitElement {
       let displacement = this.params.displacement === 'linear'? linear: noise;
       [this.color1, this.color2, this.color3].forEach(col => Object.assign(col, displacement));
     });
-    this.gui.add(this.params, 'textAlign', ['left', 'center', 'right'])
+    this.gui.add(this.params, 'displacementScale', 0.001, 10.0)
+      .onChange(() => this.requestUpdate());
+    this.gui.add(this.params, 'xOffset', -2.5, 2.5)
+      .onChange(() => this.requestUpdate());
+    this.gui.add(this.params, 'yOffset', -2.5, 2.5)
+      .onChange(() => this.requestUpdate());
+    this.gui.add(this.params, 'textAlign', ['left', 'center'])
       .onChange(() => {
         this.requestUpdate();
         let chrs = genCharacters(this.params.text, this.params.textAlign);
@@ -193,8 +201,8 @@ export class StartLitElement extends LitElement {
     // this.gui.add(this.params, 'downloadPNG');
 
     let exportFolder = this.gui.addFolder('Export');
-    exportFolder.add(this.export, 'width', 0, 10000);
-    exportFolder.add(this.export, 'height', 0, 10000);
+    exportFolder.add(this.export, 'width', 0, 4500);
+    exportFolder.add(this.export, 'height', 0, 4500);
     exportFolder.add(this.export, 'downloadPNG');
 
   }
