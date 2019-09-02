@@ -117,7 +117,7 @@ export class ShaderContainer {
         this.mesh.material.uniforms['minStep'].value = this.minStep;
         this.mesh.material.uniforms['shadow1Offset'].value = [color1.xOffset, color1.yOffset];
         let c1 = color1.color;
-        this.mesh.material.uniforms['shadow1Color'].value = [c1[0]/255, c1[1]/255, c1[2]/255, c1[3]];
+        this.mesh.material.uniforms['shadow1Color'].value = [c1[0]/255, c1[1]/255, c1[2]/255, color1.alpha];
         this.mesh.material.uniforms['shadow1Blur'].value = color1.blurRadius;
         this.mesh.material.uniforms['shadow1NoiseSpeed'].value = color1.speed;
         this.mesh.material.uniforms['shadow1NoiseScale'].value = color1.scale;
@@ -126,7 +126,7 @@ export class ShaderContainer {
 
         this.mesh.material.uniforms['shadow2Offset'].value = [color2.xOffset, color2.yOffset];
         let c2 = color2.color;
-        this.mesh.material.uniforms['shadow2Color'].value = [c2[0] / 255, c2[1] / 255, c2[2] / 255, c2[3]];
+        this.mesh.material.uniforms['shadow2Color'].value = [c2[0] / 255, c2[1] / 255, c2[2] / 255, color2.alpha];
         this.mesh.material.uniforms['shadow2Blur'].value = color2.blurRadius;
         this.mesh.material.uniforms['shadow2NoiseSpeed'].value = color2.speed;
         this.mesh.material.uniforms['shadow2NoiseScale'].value = color2.scale;
@@ -135,7 +135,7 @@ export class ShaderContainer {
 
         this.mesh.material.uniforms['shadow3Offset'].value = [color3.xOffset, color3.yOffset];
         let c3 = color3.color;
-        this.mesh.material.uniforms['shadow3Color'].value = [c3[0] / 255, c3[1] / 255, c3[2] / 255, c3[3]];
+        this.mesh.material.uniforms['shadow3Color'].value = [c3[0] / 255, c3[1] / 255, c3[2] / 255, color3.alpha];
         this.mesh.material.uniforms['shadow3Blur'].value = color3.blurRadius;
         this.mesh.material.uniforms['shadow3NoiseSpeed'].value = color3.speed;
         this.mesh.material.uniforms['shadow3NoiseScale'].value = color3.scale;
