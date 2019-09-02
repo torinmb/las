@@ -42,7 +42,8 @@ export class StartLitElement extends LitElement {
     }
 
     this.color1 = {
-      color: [255, 0, 0, 0.75],
+      color: [255, 0, 0],
+      alpha: 0.75,
       xOffset: 0.012,
       yOffset: -0.012,
       blurRadius: 0.25,
@@ -53,7 +54,8 @@ export class StartLitElement extends LitElement {
     }
 
     this.color2 = {
-      color: [24, 255, 0, 0.75],
+      color: [24, 255, 0],
+      alpha: 0.75,
       xOffset: 0.0001,
       yOffset: 0.0001,
       blurRadius: .3,
@@ -64,7 +66,8 @@ export class StartLitElement extends LitElement {
     }
 
     this.color3 = {
-      color: [0, 24, 255, 0.75],
+      color: [0, 24, 255],
+      alpha: 0.75,
       xOffset: -0.01,
       yOffset: 0.01,
       blurRadius: 0.25,
@@ -112,13 +115,13 @@ export class StartLitElement extends LitElement {
 
     this.bloom = {
       distinction : 2.0,
-      resolutionScale: 0.5,
+      resolutionScale: 0.2,
       opacity: 1.0
     }
 
     this.kerning = {
-      xOffsetScale: 200.0,
-      xAdvanceScale: 64.0
+      xOffsetScale: 0.0001,
+      xAdvanceScale: 0.016
     }
 
     this.gui = new dat.GUI();
@@ -142,13 +145,13 @@ export class StartLitElement extends LitElement {
     let color3 = this.gui.addFolder('Color 3');
     this.initColorUI(color3, this.color3);
 
-    let bloom = this.gui.addFolder('Bloom');
-    bloom.add(this.bloom, 'distinction', 0.0, 2.0)
-        .onChange(() => this.requestUpdate());
-    bloom.add(this.bloom, 'resolutionScale', 0.0, 2.0)
-        .onChange(() => this.requestUpdate());
-    bloom.add(this.bloom, 'opacity', 0.0, 1.0)
-      .onChange(() => this.requestUpdate());
+    // let bloom = this.gui.addFolder('Bloom');
+    // bloom.add(this.bloom, 'distinction', 0.0, 2.0)
+    //     .onChange(() => this.requestUpdate());
+    // bloom.add(this.bloom, 'resolutionScale', 0.01, 0.5)
+    //     .onChange(() => this.requestUpdate());
+    // bloom.add(this.bloom, 'opacity', 0.0, 1.0)
+    //   .onChange(() => this.requestUpdate());
 
     let kerning = this.gui.addFolder('Kerning');
     let kerningOnChange = (offset) => {
@@ -159,11 +162,11 @@ export class StartLitElement extends LitElement {
       this.requestUpdate();
       window.refreshMaterial();
     }
-    kerning.add(this.kerning, 'xOffsetScale', -400.0, 400.0)
+    kerning.add(this.kerning, 'xOffsetScale', -0.05, 0.05)
       .onChange(() => kerningOnChange('xOffsetScale'));
-    kerning.add(this.kerning, 'xAdvanceScale', 1.0, 100.0)
+    kerning.add(this.kerning, 'xAdvanceScale', 0.0, 0.02)
       .onChange(() => kerningOnChange('xAdvanceScale'));
-    this.gui.add(this.params, 'blur', 0.4, 3.5)
+    this.gui.add(this.params, 'blur', 0.0, 3.5)
       .onChange(() => this.requestUpdate()).listen();
     this.gui.add(this.params, 'contrast', 0.0, 1.0)
       .onChange(() => this.requestUpdate());
@@ -200,7 +203,7 @@ export class StartLitElement extends LitElement {
       .onChange(() => this.requestUpdate());
     this.gui.add(this.params, 'yOffset', -2.5, 2.5)
       .onChange(() => this.requestUpdate());
-    this.gui.add(this.params, 'textAlign', ['left', 'center'])
+    this.gui.add(this.params, 'textAlign', ['left', 'center', 'right'])
       .onChange(() => {
         this.requestUpdate();
         let chrs = genCharacters(this.params.text, this.params.textAlign);
@@ -228,18 +231,20 @@ export class StartLitElement extends LitElement {
   initColorUI(folder, param) {
     folder.addColor(param, 'color')
       .onChange(() => this.requestUpdate());
+    folder.add(param, 'alpha', 0.0, 1.0)
+      .onChange(() => this.requestUpdate());
     folder.add(param, 'xOffset', -0.25, 0.25)
       .onChange(() => this.requestUpdate());
     folder.add(param, 'yOffset', -0.25, 0.25)
       .onChange(() => this.requestUpdate());
-    folder.add(param, 'blurRadius', 0.0, 1.0)
-      .onChange(() => this.requestUpdate());
+    // folder.add(param, 'blurRadius', 0.0, 1.0)
+    //   .onChange(() => this.requestUpdate());
     let noiseFolder = folder.addFolder('Noise');
     noiseFolder.add(param, 'speed', 0.0, 1.0)
       .onChange(() => this.requestUpdate());
     noiseFolder.add(param, 'amplitude', 0.0, 0.12)
       .onChange(() => this.requestUpdate());
-    noiseFolder.add(param, 'scale', 0.01, 10.0)
+    noiseFolder.add(param, 'scale', 0.1, 5.0)
       .onChange(() => this.requestUpdate());
     noiseFolder.add(param, 'noiseEnabled')
       .onChange(() => this.requestUpdate());
@@ -314,9 +319,9 @@ export class StartLitElement extends LitElement {
             // filter: blur(${this.params.blur}px);
             // -webkit-filter: contrast(${this.params.contrast * 500}%);
             // filter: contrast(${this.params.contrast * 500}%);
-            text-shadow: ${this.color1.xOffset - this.mouse.x}px ${this.color1.yOffset - this.mouse.y}px ${this.color1.blurRadius}px rgba(${this.color1.color[0]}, ${this.color1.color[1]}, ${this.color1.color[2]}, ${this.color1.color[3]}), 
-                         ${this.color2.xOffset - this.mouse.x}px ${this.color2.yOffset - this.mouse.y}px ${this.color2.blurRadius}px rgba(${this.color2.color[0]}, ${this.color2.color[1]}, ${this.color2.color[2]}, ${this.color2.color[3]}), 
-                         ${this.color3.xOffset - this.mouse.x}px ${this.color3.yOffset - this.mouse.y}px ${this.color3.blurRadius}px rgba(${this.color3.color[0]}, ${this.color3.color[1]}, ${this.color3.color[2]}, ${this.color3.color[3]});
+            // text-shadow: ${this.color1.xOffset - this.mouse.x}px ${this.color1.yOffset - this.mouse.y}px ${this.color1.blurRadius}px rgba(${this.color1.color[0]}, ${this.color1.color[1]}, ${this.color1.color[2]}, ${this.color1.color[3]}), 
+            //              ${this.color2.xOffset - this.mouse.x}px ${this.color2.yOffset - this.mouse.y}px ${this.color2.blurRadius}px rgba(${this.color2.color[0]}, ${this.color2.color[1]}, ${this.color2.color[2]}, ${this.color2.color[3]}), 
+            //              ${this.color3.xOffset - this.mouse.x}px ${this.color3.yOffset - this.mouse.y}px ${this.color3.blurRadius}px rgba(${this.color3.color[0]}, ${this.color3.color[1]}, ${this.color3.color[2]}, ${this.color3.color[3]});
                          
         }
       </style>
