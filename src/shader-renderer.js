@@ -210,13 +210,13 @@ export class StartLitElement extends LitElement {
         window.characters = chrs;
         window.refreshMaterial();
       });
-    this.gui.add(this.params, 'text')
-      .onChange(() => {
-        let chrs = genCharacters(this.params.text, this.params.textAlign);
+    // this.gui.add(this.params, 'text')
+    //   .onChange(() => {
+    //     let chrs = genCharacters(this.params.text, this.params.textAlign);
           
-        window.characters = chrs;
-        window.refreshMaterial();
-    }).listen();
+    //     window.characters = chrs;
+    //     window.refreshMaterial();
+    // }).listen();
 
     this.gui.add(this.params, 'mouseMovementSpeed', 0., 0.1);
     // this.gui.add(this.params, 'downloadPNG');

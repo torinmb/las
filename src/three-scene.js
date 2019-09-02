@@ -11,8 +11,8 @@ export const renderScene = (container, guiData) => {
     window.guiData = guiData;
     window.resScale = 700;
     const scene = new THREE.Scene();
-    
-    const texture = new THREE.TextureLoader().load('fonts/msdf-left-allign.png');
+    const texture = new THREE.TextureLoader().load('fonts/LAS-msdf.png');
+    // const texture = new THREE.TextureLoader().load('fonts/msdf-left-allign.png');
     const camera = new THREE.PerspectiveCamera(35, container.clientWidth / container.clientHeight, 1, 1000);
     camera.position.set(0, 0, 2);
     guiData.params.resolution = new THREE.Vector2(container.clientWidth, container.clientHeight);

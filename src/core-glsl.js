@@ -10,7 +10,8 @@ void main()
 }
 `;
 let fontData = {};
-fetch('/fonts/Helvetica-msdf.json').then(data => data.json()).then(data => {
+// fetch('/fonts/Helvetica-msdf.json').then(data => data.json()).then(data => {
+fetch('/fonts/LAS-msdf.json').then(data => data.json()).then(data => {
     fontData = data;
     console.log(fontData);
 });
@@ -22,7 +23,8 @@ let ensureFloat = 0.00000000000001;
 
 export const genCharacters = (input, alignment)=> {
     let out = '';
-    console.log(input, 'input');
+    // console.log(input, 'input');
+    input = 'LAS';
     input = input.split('\\n');
     let outputArray = [];
     let maxWidth = 0.0;
@@ -50,6 +52,8 @@ export const genCharacters = (input, alignment)=> {
                 amt = ensureFloat;
             }
             let code = str.charCodeAt(i);
+            
+            console.log('CODE', code)
             let xAdvance = 0.0;
             let xOffset = 0.0;
             let kerning = 0.0;
@@ -86,6 +90,19 @@ export const genCharacters = (input, alignment)=> {
             if(code == 32) {
                 output.push(`uv.x -=  ${(xAdvance) +ensureFloat}+letterSpacing;`);
             } else {
+                switch (code) {
+                    case 76:
+                        code = 1;
+                        break;
+                    case 65:
+                        code = 0;
+                        break;
+                    case 83:
+                        code = 2;
+                        break;
+                    default:
+                        break;
+                }
                 output.push(`d = max(d, character(uv, ${code}));\n`);
                 output.push(`uv.x -=  ${(kerning + xAdvance) + ensureFloat}+letterSpacing; //advance`);
 
@@ -156,24 +173,43 @@ export const genCharacters = (input, alignment)=> {
     return out;
 }
 
+// window.characters = `
+// uv.x += 0.60156250000001;
+// uv.x -=  0.010000000000010001; //offset
+// d = max(d, character(uv, 76));
+
+// uv.x -=  0.35937500000001+letterSpacing; //advance
+// uv.x +=  0.010000000000010001; //undo offset
+// uv.x -=  -0.01999999999999; //offset
+// d = max(d, character(uv, 65));
+
+// uv.x -=  0.42187500000001+letterSpacing; //advance
+// uv.x +=  -0.01999999999999; //undo offset
+// uv.x -=  1e-14; //offset
+// d = max(d, character(uv, 83));
+
+// uv.x -=  0.42187500000001+letterSpacing; //advance
+// uv.x +=  1e-14; //undo offset
+// uv.x += 0.60156250000001;`;
+
 window.characters = `
-uv.x += 0.60156250000001;
-uv.x -=  0.010000000000010001; //offset
-d = max(d, character(uv, 76));
+uv.x += 0.56000000000001;
+uv.x -=  -0.0019999999999900002; //offset
+d = max(d, character(uv, 1));
 
-uv.x -=  0.35937500000001+letterSpacing; //advance
-uv.x +=  0.010000000000010001; //undo offset
-uv.x -=  -0.01999999999999; //offset
-d = max(d, character(uv, 65));
+uv.x -=  0.27200000000001+letterSpacing; //advance
+uv.x +=  -0.0019999999999900002; //undo offset
+uv.x -=  -0.0019999999999900002; //offset
+d = max(d, character(uv, 0));
 
-uv.x -=  0.42187500000001+letterSpacing; //advance
-uv.x +=  -0.01999999999999; //undo offset
-uv.x -=  1e-14; //offset
-d = max(d, character(uv, 83));
+uv.x -=  0.46400000000001+letterSpacing; //advance
+uv.x +=  -0.0019999999999900002; //undo offset
+uv.x -=  -0.0029999999999900002; //offset
+d = max(d, character(uv, 2));
 
-uv.x -=  0.42187500000001+letterSpacing; //advance
-uv.x +=  1e-14; //undo offset
-uv.x += 0.60156250000001;`;
+uv.x -=  0.38400000000001+letterSpacing; //advance
+uv.x +=  -0.0029999999999900002; //undo offset
+uv.x += 0.56000000000001;`
 // export let characters = genCharacters('LAS');
 // console.log(characters);
 // const characters = `
@@ -371,7 +407,7 @@ vec4 sphericalDistribution( vec3 p, float n )
 
 #define COLS 16.0
 #define ROWS 16.0
-#define START_CODE 33
+#define START_CODE 0
 #define CHARS_COUNT 94
 
 
