@@ -62,14 +62,16 @@ export const renderScene = (container, guiData) => {
     let brightnessContrastEffect = new BrightnessContrastEffect({ contrast: guiData.params.contrast });
     // let feedbackEffect = new FeedbackEffect({ bufferTexture: savePass2.renderTarget, frameTexture: savePass.renderTarget });
     let invertEffect = new InvertEffect({ invert: guiData.params.invert });
-    const effectPass = new EffectPass(camera, bloomEffect, brightnessContrastEffect, invertEffect);
+    const effectPass = new EffectPass(camera, brightnessContrastEffect);
     effectPass.renderToScreen = true;
+    // const effectPass2 = new EffectPass(camera, bloomEffect, invertEffect);
+    // effectPass2.renderToScreen = true;
 
     composer.addPass(new RenderPass(scene, camera));
     composer.addPass(blurPass);
     composer.addPass(effectPass);
-    composer.addPass(savePass);
-
+    // composer.addPass(savePass);
+    // composer.addPass(effectPass2);
     
 
     let t = 0.0;
@@ -101,18 +103,19 @@ export const renderScene = (container, guiData) => {
 
         
         
-        bloomEffect.threshold = guiData.bloom.distinction;
-        bloomEffect.blendMode.opacity.value = guiData.bloom.opacity;
-        bloomEffect.setResolutionScale(guiData.bloom.resolutionScale);
-        // blurPass.setResolutionScale(1.5 - (guiData.params.blur));
+        // bloomEffect.threshold = guiData.bloom.distinction;
+        // bloomEffect.blendMode.opacity.value = guiData.bloom.opacity;
+        // bloomEffect.setResolutionScale(guiData.bloom.resolutionScale);
         blurPass.scale = (guiData.params.blur);
-        brightnessContrastEffect.fragmentShader = `
-        uniform float brightness;
-        uniform float contrast;
-        void mainImage(const in vec4 inputColor,const in vec2 uv,out vec4 outputColor){
-            outputColor = inputColor * contrast;
-        }`;
+
+        // brightnessContrastEffect.fragmentShader = `
+        // uniform float brightness;
+        // uniform float contrast;
+        // void mainImage(const in vec4 inputColor,const in vec2 uv,out vec4 outputColor){
+        //     outputColor = inputColor * contrast;
+        // }`;
         brightnessContrastEffect.uniforms.get("contrast").value = guiData.params.contrast;
+        // brightnessContrastEffect.uniforms.get("brightness").value = guiData.params.brightness;
         invertEffect.uniforms.get('invert').value = guiData.params.invert;
         
         shaderContainer.update({time, mouse, ...guiData});
