@@ -60,7 +60,7 @@ export class StartLitElement extends LitElement {
       yOffset: 0.0001,
       blurRadius: .3,
       speed: 0.1,
-      amplitude: 0.03,
+      amplitude: 0.05,
       scale: 1.0,
       noiseEnabled: true
     }
@@ -72,7 +72,7 @@ export class StartLitElement extends LitElement {
       yOffset: 0.01,
       blurRadius: 0.25,
       speed: 0.1,
-      amplitude: 0.03,
+      amplitude: 0.07,
       scale: 1.0,
       noiseEnabled: true
     }
