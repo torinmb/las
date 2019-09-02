@@ -16,15 +16,16 @@ fetch('/fonts/Helvetica-msdf.json').then(data => data.json()).then(data => {
 });
 
 //xadvance 8, 43
-window.xAdvanceScale = 64;
-window.xOffsetScale = 100;
+window.xAdvanceScale = 0.016;
+window.xOffsetScale = 0.001;
 let ensureFloat = 0.00000000000001;
 
 export const genCharacters = (input, alignment)=> {
     let out = '';
     console.log(input, 'input');
     input = input.split('\\n');
-    
+    let outputArray = [];
+    let maxWidth = 0.0;
     input.forEach((str, index) => {
 
         let output = [];
@@ -42,6 +43,7 @@ export const genCharacters = (input, alignment)=> {
         }
         
         let totalWidth = 0.0;
+        
         for(let i = 0; i < str.length; i++) {
             let amt = (str.length / 2 - i);
             if(amt === 0 || str.length == 1) {
@@ -58,7 +60,7 @@ export const genCharacters = (input, alignment)=> {
                     let code2 = str.charCodeAt(i+1);
                     let kerningMatch = kernings.filter(obj => obj.first == code).filter(obj => obj.second == code2)[0];
                     if(kerningMatch) {
-                        kerning = kerningMatch.amount / window.xAdvanceScale + ensureFloat;
+                        kerning = kerningMatch.amount * window.xAdvanceScale + ensureFloat;
                     }
                     console.log(kerningMatch, kerning)
                 }
@@ -68,8 +70,8 @@ export const genCharacters = (input, alignment)=> {
                     
                     chr = chr[0];
                     
-                    xAdvance = chr.xadvance / window.xAdvanceScale;
-                    xOffset = chr.xoffset / window.xOffsetScale;
+                    xAdvance = chr.xadvance * window.xAdvanceScale;
+                    xOffset = chr.xoffset * window.xOffsetScale;
                     console.log(`${chr} xAdvance: ${xAdvance} u:${chr.xadvance}`);
                 }
             }
@@ -78,10 +80,11 @@ export const genCharacters = (input, alignment)=> {
             // kerning = 0.0;
             // out += `uv.x += letterSpacing * ${amt * 1.00000000001 };\n`
             totalWidth += xAdvance + kerning ;
+            maxWidth = Math.max(totalWidth, maxWidth);
             output.push(`uv.x -=  ${xOffset + ensureFloat}; //offset`);
             // out += `uv.x -=  ${(xAdvance + kerning) * ensureFloat};\n`
             if(code == 32) {
-                output.push(`uv.x -=  ${(kerning) +ensureFloat}+letterSpacing;`);
+                output.push(`uv.x -=  ${(xAdvance) +ensureFloat}+letterSpacing;`);
             } else {
                 output.push(`d = max(d, character(uv, ${code}));\n`);
                 output.push(`uv.x -=  ${(kerning + xAdvance) + ensureFloat}+letterSpacing; //advance`);
@@ -105,19 +108,51 @@ export const genCharacters = (input, alignment)=> {
             // output.push(`uv.x += ${totalWidth / 2. + ensureFloat};`);
             // output.unshift(`uv.x += ${totalWidth / 2. + ensureFloat};`);
             if (index === 0) {
-                // output.unshift(`uv.x -= ${totalWidth + ensureFloat};`);
-            } else {
-                // output.push(`uv.x -= ${ totalWidth + ensureFloat};`);
+                output.unshift(`uv.x += ${totalWidth }; $`);
             }
-            
+            output.push(`uv.x += ${totalWidth }; $`);
             //\___(o . o)___/
             //output.push(`uv.x += ${totalWidth / 2. + ensureFloat};`);
         }
         //output.unshift(`uv.x +=  ${totalWidth/2 + ensureFloat};`);
         //output.push(`uv.x +=  ${totalWidth / 2 + ensureFloat};`);
         // output.unshift(`uv = vUv;\nuv = (uv - vec2(0.5))*fontSize + vec2(0.5);`);
-        out += output.join('\n');
+        
+        // out += output.join('\n');
+        outputArray.push(output);
     });
+
+    if (alignment === 'right') {
+        console.log('maxWidth', maxWidth);
+        outputArray = outputArray.map(output => {
+            return output.map(el => {
+                if (el.includes('$')) {
+                    
+                    // el = el.slice(0, el.length - 3);
+                    // console.log('INCLUDES', el)
+                    
+                    el = el.slice(0, el.length - 3);
+                    let currOffset = parseFloat(el.slice(el.indexOf('+=') + 3, el.length));
+
+                    let finalOffset =  maxWidth - currOffset;;
+                    // if (currOffset !== maxWidth) {
+                    //     finalOffset += currOffset;
+                    // } 
+                    
+                    console.log('el TEST', currOffset);
+                    el += ' +' + (finalOffset + ensureFloat ) + ';\n';
+                    // el = 'uv.x += ' + currOffset + ensureFloat + ';\n';
+                    return el;
+                   
+                }
+                return el;
+            });
+        })
+    }
+
+    outputArray.forEach(el => {
+        out += el.join('\n');
+    })
     return out;
 }
 
@@ -345,8 +380,8 @@ float border = 0.0; //: range(0.0, 0.25);
 
 float pxSize = 0.05;
 
-const vec3 bottomColor = vec3(0.0, 0.21875, 0.375);
-const vec3 topColor = vec3(0.0, 0.625, 1.0);
+const vec3 bottomColor = vec3(1.0, 1.0, 1.0);
+const vec3 topColor = vec3(1.0, 1.0, 1.0);
 const vec3 borderColor = vec3(1.0, 1.0, 1.0);
 
 uniform vec2 shadow1Offset;
@@ -474,7 +509,7 @@ void main() {
     float shadow1 = shadow1Color.a*linearstep(0.0, +shadow1Blur+pxSize, sd);
     vec2 uv3 = uv;
     if(shadow2NoiseEnabled) {
-        uv3 -= noise(nuv*shadow2NoiseScale +time*shadow2NoiseSpeed + 100.)*shadow2NoiseAmplitude*displacementScale;
+        uv3 -= noise(nuv*shadow2NoiseScale +time*shadow2NoiseSpeed)*shadow2NoiseAmplitude*displacementScale;
     } else { 
         uv3.x += sin(shadow2NoiseScale +time*shadow2NoiseSpeed)*shadow2NoiseAmplitude*displacementScale;
         uv3.y += cos(shadow2NoiseScale +time*shadow2NoiseSpeed)*shadow2NoiseAmplitude*displacementScale;
@@ -483,7 +518,7 @@ void main() {
     float shadow2 = shadow2Color.a*linearstep(0.0, +shadow2Blur+pxSize, sd);
     vec2 uv4 = uv;
     if(shadow3NoiseEnabled) {
-        uv4 -= noise(nuv*shadow3NoiseScale +time*shadow3NoiseSpeed + 1000.)*shadow3NoiseAmplitude*displacementScale;
+        uv4 -= noise(nuv*shadow3NoiseScale +time*shadow3NoiseSpeed)*shadow3NoiseAmplitude*displacementScale;
     } else { 
         uv4.x += sin(shadow3NoiseScale +time*shadow3NoiseSpeed)*shadow3NoiseAmplitude*displacementScale;
         uv4.y += cos(shadow3NoiseScale +time*shadow3NoiseSpeed)*shadow3NoiseAmplitude*displacementScale;
@@ -497,6 +532,12 @@ void main() {
     o = mix(o, shadow2Color, (1.0 - inside) * shadow2);
     o = mix(o, shadow3Color, (1.0 - inside) * shadow3);
     
+    // float cutoff = 0.9;
+    // // if (o.r < cutoff && o.g < cutoff && o.b < cutoff) {
+    if(o.xyz == vec3(0.)){
+        discard;
+    }
+    // o.a *= 1.;
     gl_FragColor = o;
 	
 }
