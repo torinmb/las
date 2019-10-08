@@ -96,7 +96,8 @@ export class StartLitElement extends LitElement {
       text: 'LAS',
       mouseMovementSpeed: 0.02,
       backgroundColor: 0.0,
-      resolution: [0, 0]
+      resolution: [0, 0],
+      pauseAnimation: false
     }
 
     this.export = {
@@ -125,17 +126,44 @@ export class StartLitElement extends LitElement {
     }
 
     this.gui = new dat.GUI();
-    this.gui.remember(this.export);
-    this.gui.remember(this.params);
-    this.gui.remember(this.color1);
-    this.gui.remember(this.color2);
-    this.gui.remember(this.color3);
-    this.gui.remember(this.bloom);
-    this.gui.remember(this.kerning);
+    // this.gui.remember(this.export);
+    // this.gui.remember(this.params);
+    // this.gui.remember(this.color1);
+    // this.gui.remember(this.color2);
+    // this.gui.remember(this.color3);
+    // this.gui.remember(this.bloom);
+    // this.gui.remember(this.kerning);
+
+    
     // let el = (this.gui.domElement.style.display = 'none');
     document.querySelector('.dg').style.zIndex = 999;
     window.addEventListener('mousemove', this.onDocumentMouseMove.bind(this), false);
 
+    let text = this.gui.addFolder('Text');
+    text.add(this.params, 'text')
+      .onChange(() => {
+        let chrs = genCharacters(this.params.text, this.params.textAlign);
+        window.characters = chrs;
+        window.refreshMaterial();
+      }).listen();
+    text.add(this.params, 'textAlign', ['left', 'center'])
+      .onChange(() => {
+        this.requestUpdate();
+        let chrs = genCharacters(this.params.text, this.params.textAlign);
+        window.characters = chrs;
+        window.refreshMaterial();
+      });
+    text.add(this.params, 'fontSize', 10.0, 18.5)
+      .onChange((val) => {
+        this.params.blur = Math.max(0.1, val * 0.1 - 0.7);
+        this.requestUpdate()
+      });
+    text.add(this.params, 'lineHeight', -2.0, 2.0)
+      .onChange(() => this.requestUpdate());
+    text.add(this.params, 'xOffset', -2.5, 2.5)
+      .onChange(() => this.requestUpdate());
+    text.add(this.params, 'yOffset', -2.5, 2.5)
+      .onChange(() => this.requestUpdate());
     let color1 = this.gui.addFolder('Color 1');
     this.initColorUI(color1, this.color1);
 
@@ -144,16 +172,20 @@ export class StartLitElement extends LitElement {
 
     let color3 = this.gui.addFolder('Color 3');
     this.initColorUI(color3, this.color3);
+    
+    this.gui.add(this.params, 'pauseAnimation')
+      .onChange((val) => {
+        this.pausePlayAnimation(val);
+      }).listen();
+    
+    let exportFolder = this.gui.addFolder('Export');
+    exportFolder.add(this.export, 'width', 0, 4500);
+    exportFolder.add(this.export, 'height', 0, 4500);
+    exportFolder.add(this.export, 'downloadPNG');
 
-    // let bloom = this.gui.addFolder('Bloom');
-    // bloom.add(this.bloom, 'distinction', 0.0, 2.0)
-    //     .onChange(() => this.requestUpdate());
-    // bloom.add(this.bloom, 'resolutionScale', 0.01, 0.5)
-    //     .onChange(() => this.requestUpdate());
-    // bloom.add(this.bloom, 'opacity', 0.0, 1.0)
-    //   .onChange(() => this.requestUpdate());
+    let advancedFolder = this.gui.addFolder('Advanced');
 
-    let kerning = this.gui.addFolder('Kerning');
+    let kerning = advancedFolder.addFolder('Kerning');
     let kerningOnChange = (offset) => {
       let val = this.kerning[offset] === 0.0 ? 0.0001 : this.kerning[offset];
       window[offset] = val;
@@ -166,80 +198,50 @@ export class StartLitElement extends LitElement {
       .onChange(() => kerningOnChange('xOffsetScale'));
     kerning.add(this.kerning, 'xAdvanceScale', 0.0, 0.02)
       .onChange(() => kerningOnChange('xAdvanceScale'));
-    this.gui.add(this.params, 'blur', 0.0, 3.5)
+    advancedFolder.add(this.params, 'blur', 0.0, 3.5)
       .onChange(() => this.requestUpdate()).listen();
-    this.gui.add(this.params, 'contrast', 0.0, 1.0)
+    advancedFolder.add(this.params, 'contrast', 0.0, 1.0)
       .onChange(() => this.requestUpdate());
-    // this.gui.add(this.params, 'brightness', 0.0, 3.5)
+    // advancedFolder.add(this.params, 'brightness', 0.0, 3.5)
     //   .onChange(() => this.requestUpdate());
-    // this.gui.add(this.params, 'invert', 0.0, 3.5)
+    // advancedFolder.add(this.params, 'invert', 0.0, 3.5)
     //   .onChange(() => {
     //     this.params.backgroundColor = 255 * ((3.0 - this.params.invert));
     //     this.requestUpdate();
     //   }).listen();
-    this.gui.add(this.params, 'invertScene').onChange(() => {
+    advancedFolder.add(this.params, 'invertScene').onChange(() => {
       this.params.invert = this.params.invertScene? 3.0: 1.0;
       this.params.backgroundColor = 255 * ((3.0 - this.params.invert));
       this.requestUpdate();
     })
-    this.gui.add(this.params, 'fontSize', 10.0, 18.5)
-      .onChange((val) => {
-        this.params.blur = Math.max(0.1, val*0.1 - 0.7);
-        this.requestUpdate()
-      });
+
     kerning.add(this.params, 'letterSpacing', -1.5, 1.5)
       .onChange(() => this.requestUpdate());
-    this.gui.add(this.params, 'lineHeight', -2.0, 2.0)
-      .onChange(() => this.requestUpdate());
-    this.gui.add(this.params, 'displacement', ['noise', 'linear']).onChange(() => {
+
+    advancedFolder.add(this.params, 'displacement', ['noise', 'linear']).onChange(() => {
       let linear = {scale: 0.001, amplitude: 0.021};
       let noise = {scale: 1.0, amplitude: 0.03, time : 0.1}
       let displacement = this.params.displacement === 'linear'? linear: noise;
       [this.color1, this.color2, this.color3].forEach(col => Object.assign(col, displacement));
     });
-    this.gui.add(this.params, 'displacementScale', 0.001, 10.0)
+    advancedFolder.add(this.params, 'displacementScale', 0.001, 10.0)
       .onChange(() => this.requestUpdate());
-    this.gui.add(this.params, 'xOffset', -2.5, 2.5)
-      .onChange(() => this.requestUpdate());
-    this.gui.add(this.params, 'yOffset', -2.5, 2.5)
-      .onChange(() => this.requestUpdate());
-    this.gui.add(this.params, 'textAlign', ['left', 'center', 'right'])
-      .onChange(() => {
-        this.requestUpdate();
-        let chrs = genCharacters(this.params.text, this.params.textAlign);
-        window.characters = chrs;
-        window.refreshMaterial();
-      });
-    this.gui.add(this.params, 'text')
-      .onChange(() => {
-        let chrs = genCharacters(this.params.text, this.params.textAlign);
-          
-        window.characters = chrs;
-        window.refreshMaterial();
-    }).listen();
-
-    this.gui.add(this.params, 'mouseMovementSpeed', 0., 0.1);
-    // this.gui.add(this.params, 'downloadPNG');
-
-    let exportFolder = this.gui.addFolder('Export');
-    exportFolder.add(this.export, 'width', 0, 4500);
-    exportFolder.add(this.export, 'height', 0, 4500);
-    exportFolder.add(this.export, 'downloadPNG');
-
+    advancedFolder.add(this.params, 'mouseMovementSpeed', 0., 0.1);
   }
 
   initColorUI(folder, param) {
     folder.addColor(param, 'color')
       .onChange(() => this.requestUpdate());
-    folder.add(param, 'alpha', 0.0, 1.0)
+    let advanced = folder.addFolder('Advanced');
+    advanced.add(param, 'alpha', 0.0, 1.0)
       .onChange(() => this.requestUpdate());
-    folder.add(param, 'xOffset', -0.25, 0.25)
+    advanced.add(param, 'xOffset', -0.25, 0.25)
       .onChange(() => this.requestUpdate());
-    folder.add(param, 'yOffset', -0.25, 0.25)
+    advanced.add(param, 'yOffset', -0.25, 0.25)
       .onChange(() => this.requestUpdate());
     // folder.add(param, 'blurRadius', 0.0, 1.0)
     //   .onChange(() => this.requestUpdate());
-    let noiseFolder = folder.addFolder('Noise');
+    let noiseFolder = advanced.addFolder('Noise');
     noiseFolder.add(param, 'speed', 0.0, 1.0)
       .onChange(() => this.requestUpdate());
     noiseFolder.add(param, 'amplitude', 0.0, 0.12)
@@ -339,7 +341,7 @@ export class StartLitElement extends LitElement {
    */
   firstUpdated() {
       const canvasEl = this.shadowRoot.getElementById('container');
-      let {downloadScreenShot} = renderScene(canvasEl, {
+    let { downloadScreenShot, pausePlayAnimation} = renderScene(canvasEl, {
         color1 :this.color1, 
         color2: this.color2, 
         color3: this.color3, 
@@ -351,12 +353,19 @@ export class StartLitElement extends LitElement {
       window.refreshMaterial();
       window.text = this.params.text;
       this.downloadScreenShot = downloadScreenShot;
+      this.pausePlayAnimation = pausePlayAnimation
   }
 
   downloadPNG() {
     console.log('this.downloadScreenShot', this.downloadScreenShot)
     if(this.downloadScreenShot) {
       this.downloadScreenShot(this.export.width, this.export.height);
+    }
+  }
+
+  pausePlayAnimation(val) {
+    if (this.pausePlayAnimation) {
+      this.pausePlayAnimation(val);
     }
   }
 

@@ -10,6 +10,7 @@ export const renderScene = (container, guiData) => {
     console.log('got to donwload screenshot')
     window.guiData = guiData;
     window.resScale = 700;
+    let pauseAnimation = false;
     const scene = new THREE.Scene();
     
     const texture = new THREE.TextureLoader().load('fonts/msdf-left-allign.png');
@@ -82,7 +83,10 @@ export const renderScene = (container, guiData) => {
 
     function renderScene(time) {
         raycaster.setFromCamera(mouse, camera);
-        t = time;
+        if (!pauseAnimation) {
+            t = time;
+        }
+        
         // let intersects = raycaster.intersectObjects(objectsToRaycast);
         // if (intersects.length > 0) {
         //     const firstIntersect = intersects[0].object;
@@ -120,7 +124,7 @@ export const renderScene = (container, guiData) => {
         // brightnessContrastEffect.uniforms.get("brightness").value = guiData.params.brightness;
         invertEffect.uniforms.get('invert').value = guiData.params.invert;
         
-        shaderContainer.update({time, mouse, ...guiData});
+        shaderContainer.update({time:t, mouse, ...guiData});
 
         composer.render(time);
     }
@@ -155,6 +159,10 @@ export const renderScene = (container, guiData) => {
         return str.replace(/\//g, '-').replace(/:/g, '.');
     }
 
+    function pausePlayAnimation(val) {
+        pauseAnimation = val;
+    }
+
     function downloadScreenShot(width, height) {
         const renderer = composer.getRenderer();
 		const originalSize = renderer.getSize(new THREE.Vector2());
@@ -187,6 +195,6 @@ export const renderScene = (container, guiData) => {
     }
 
 
-    return { downloadScreenShot};
+    return { downloadScreenShot, pausePlayAnimation};
     
 }
