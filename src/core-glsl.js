@@ -537,7 +537,7 @@ void main() {
     if(o.xyz == vec3(0.)){
         discard;
     }
-    // o.a *= 1.;
+    // o.a *= 2.2;
     gl_FragColor = o;
 	
 }
