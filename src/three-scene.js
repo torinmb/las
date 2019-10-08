@@ -53,21 +53,23 @@ export const renderScene = (container, guiData) => {
     pointLight.position.x = 40;
 
     window.scene = scene;
-    let bloomEffect = new BloomEffect();
-    window.bloomEffect = bloomEffect;
-    let blurPass = new BlurPass({ height: 960, kernelSize: KernelSize.HUGE});
+    // let bloomEffect = new BloomEffect();
+    // window.bloomEffect = bloomEffect;
+    let blurPass = new BlurPass({ height: 960, kernelSize: KernelSize.HUGE, blendFunction: BlendFunction.OVERLAY  }, false);
+
     window.blurPass = blurPass;
     let savePass = new SavePass();
 
-    let brightnessContrastEffect = new BrightnessContrastEffect({ contrast: guiData.params.contrast });
+    // let brightnessContrastEffect = new BrightnessContrastEffect({ contrast: guiData.params.contrast });
+    let brightnessContrastEffect = new BrightnessContrastEffect({ contrast: guiData.params.contrast, blendFunction: BlendFunction.OVERLAY });
     // let feedbackEffect = new FeedbackEffect({ bufferTexture: savePass2.renderTarget, frameTexture: savePass.renderTarget });
-    let invertEffect = new InvertEffect({ invert: guiData.params.invert });
+    let invertEffect = new InvertEffect({ invert: guiData.params.invert, blendFunction: BlendFunction.OVERLAY  });
     const effectPass = new EffectPass(camera, brightnessContrastEffect);
     effectPass.renderToScreen = true;
     // const effectPass2 = new EffectPass(camera, bloomEffect, invertEffect);
     // effectPass2.renderToScreen = true;
-
     composer.addPass(new RenderPass(scene, camera));
+    
     composer.addPass(blurPass);
     composer.addPass(effectPass);
     // composer.addPass(savePass);
