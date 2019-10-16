@@ -42,39 +42,39 @@ export class StartLitElement extends LitElement {
     }
 
     this.color1 = {
-      color: [255, 0, 0],
-      alpha: 0.75,
-      xOffset: 0.012,
-      yOffset: -0.012,
+      color: [0, 255, 255],
+      alpha: 0.67,
+      xOffset: -.072,
+      yOffset: 0.048,
       blurRadius: 0.25,
-      speed: 0.1,
-      amplitude: 0.03,
+      speed: 0.56,
+      amplitude: 0.0012,
       scale: 1.0,
-      noiseEnabled: true
+      noiseEnabled: false
     }
 
     this.color2 = {
-      color: [24, 255, 0],
+      color: [255, 255, 0],
       alpha: 0.75,
-      xOffset: 0.0001,
-      yOffset: 0.0001,
+      xOffset: 0.0754,
+      yOffset: -0.037,
       blurRadius: .3,
-      speed: 0.1,
-      amplitude: 0.05,
-      scale: 1.0,
-      noiseEnabled: true
+      speed: 0.5,
+      amplitude: 0.011,
+      scale: 0.7,
+      noiseEnabled: false
     }
 
     this.color3 = {
-      color: [0, 24, 255],
+      color: [255, 0, 0],
       alpha: 0.75,
-      xOffset: -0.01,
-      yOffset: 0.01,
+      xOffset: 0.019,
+      yOffset: -0.049,
       blurRadius: 0.25,
-      speed: 0.1,
-      amplitude: 0.07,
-      scale: 1.0,
-      noiseEnabled: true
+      speed: 0.05,
+      amplitude: 0.0,
+      scale: 1.4,
+      noiseEnabled: false
     }
 
     this.params = {
@@ -88,7 +88,7 @@ export class StartLitElement extends LitElement {
       lineHeight: 0.55,
       opacity: 1,
       textAlign: 'center',
-      displacement: 'noise',
+      displacement: 'linear',
       displacementScale: 4.0,
       xOffset: 0.2,
       yOffset: 0.0001,
@@ -97,7 +97,7 @@ export class StartLitElement extends LitElement {
       mouseMovementSpeed: 0.02,
       backgroundColor: 0.0,
       resolution: [0, 0],
-      pauseAnimation: false
+      pauseAnimation: true
     }
 
     this.export = {
@@ -223,7 +223,7 @@ export class StartLitElement extends LitElement {
       let noise = {scale: 1.0, amplitude: 0.03, time : 0.1}
       let displacement = this.params.displacement === 'linear'? linear: noise;
       [this.color1, this.color2, this.color3].forEach(col => Object.assign(col, displacement));
-    });
+    }).listen();
     advancedFolder.add(this.params, 'displacementScale', 0.001, 10.0)
       .onChange(() => this.requestUpdate());
     advancedFolder.add(this.params, 'mouseMovementSpeed', 0., 0.1);
@@ -354,6 +354,8 @@ export class StartLitElement extends LitElement {
       window.text = this.params.text;
       this.downloadScreenShot = downloadScreenShot;
       this.pausePlayAnimation = pausePlayAnimation
+      this.pausePlayAnimation(true);
+      this.params.displacement = "linear";
   }
 
   downloadPNG() {
