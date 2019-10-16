@@ -2,8 +2,7 @@
 
 <html lang="en">
 <head>
-  <!-- Register service worker if supported. -->
-  <!--
+  <!-- Register service worker if supported.
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/service-worker.js');
@@ -29,8 +28,7 @@
         import('./src/shader-renderer.js');
       });
   </script>
-  <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image/2.6.0/dom-to-image.js"></script> -->
-  <!-- Change stuff here for your app -->
+  
   <meta name="Light Art Studio" content="renderer">
   <meta name="theme-color" content="#ffffff">
   <title>LAS Renderer</title>
@@ -46,35 +44,5 @@
   </style>
 </head>
 <body>
-
-  <!-- 
-    To configure starting state of the checkbox from markup: 
-    <renderer pie="true"> 
-  -->
-  <!-- <las-renderer spSculptureId="-LhN4h_eCne8kYRnnc42" width="50vw" height="50vh">
-    <p id="jsyes"></p>
-    <script type="text/javascript">
-      document.getElementById('jsyes').innerHTML='Loading...';
-    </script>
-    <noscript>
-      Could not render the custom element. Check that JavaScript is enabled.
-    </noscript>
-  </las-renderer> -->
-  <!-- <blotter-renderer id="las-renderer" width="100vw" height="100vh"></blotter-renderer> -->
-  
   <shader-renderer id="shader-renderer" width="100vw" height="100vh" ></shader-renderer>
-  <!-- <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.6/dat.gui.min.js"></script>
-  <script>
-      
-      let params = {
-        color1: [255, 0, 0, 0.75]
-      }
-      let gui = new dat.GUI();
-      let color1Controller = gui.addColor(params, 'color1');
-      color1Controller.onChange((val) => {
-        params.color1 = val.slice();
-        console.log(params.color1);
-      });
-      document.getElementById('las-renderer').params = params;
-  </script> -->
 </body>
