@@ -15,6 +15,6 @@
     "dom-to-image": "^2.6.0",
     "lit-element": "latest",
     "postprocessing": "^6.6.0",
-    "three": "^0.107"
+    "three": "^0.137"
   }
 }
